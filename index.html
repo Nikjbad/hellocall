@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HelloCall – Real Video Calls & Live Chat</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --e:#5b5ef4;--el:#7c7ff7;--ed:#3a3dc9;
+  --g:#00f5a0;--p:#ff4d9e;--s:#00c8ff;
+  --w:#ffffff;--ow:#f8f8ff;--sw:#f0f2ff;
+  --d:#0d0d1a;--gr:#6b7280;--lg:#e5e7f0;
+  --r:#ff4444;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--w);color:var(--d);overflow-x:hidden}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;width:100%}
+.screen.active{display:flex}
+
+/* ── LANDING ── */
+#landing{flex-direction:column;background:var(--w);overflow-y:auto}
+
+nav{position:sticky;top:0;z-index:100;padding:1rem 5%;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(91,94,244,0.1)}
+.logo{font-family:'Clash Display',sans-serif;font-size:1.6rem;font-weight:700;
+  color:var(--e);display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo-dot{width:10px;height:10px;background:var(--g);border-radius:50%;animation:pd 1.5s infinite}
+@keyframes pd{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+.nav-cta{background:var(--e);color:#fff;padding:.6rem 1.4rem;border-radius:50px;
+  font-weight:600;font-size:.9rem;border:none;cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 18px rgba(91,94,244,.35)}
+.nav-cta:hover{background:var(--ed);transform:translateY(-2px)}
+
+/* HERO */
+.hero{padding:5rem 5% 4rem;text-align:center;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.15;animation:fo 8s ease-in-out infinite}
+.o1{width:500px;height:500px;background:var(--e);top:-200px;right:-100px}
+.o2{width:350px;height:350px;background:var(--p);bottom:-100px;left:-100px;animation-delay:-3s}
+.o3{width:250px;height:250px;background:var(--s);top:40%;left:30%;animation-delay:-5s}
+@keyframes fo{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-25px)}}
+.grid-bg{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(91,94,244,.05)1px,transparent 1px),linear-gradient(90deg,rgba(91,94,244,.05)1px,transparent 1px);
+  background-size:55px 55px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%)}
+.hero-inner{position:relative;z-index:1;max-width:720px;margin:0 auto}
+.badge{display:inline-flex;align-items:center;gap:7px;background:var(--sw);
+  border:1px solid rgba(91,94,244,.2);color:var(--e);padding:.4rem .9rem;
+  border-radius:50px;font-size:.8rem;font-weight:600;margin-bottom:1.5rem}
+.bdot{width:7px;height:7px;background:var(--g);border-radius:50%;animation:pd 1s infinite}
+h1{font-family:'Clash Display',sans-serif;font-size:clamp(2.8rem,6vw,4.5rem);
+  font-weight:700;line-height:1.1;margin-bottom:1rem}
+.grad{background:linear-gradient(135deg,#5b5ef4,#8b5cf6,#c084fc);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:1.1rem;color:#555;line-height:1.7;max-width:560px;margin:0 auto 2.5rem}
+.hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:3rem}
+.btn-p{background:var(--e);color:#fff;padding:.9rem 2rem;border-radius:50px;
+  font-size:1rem;font-weight:600;border:none;cursor:pointer;
+  box-shadow:0 8px 28px rgba(91,94,244,.4);transition:all .25s}
+.btn-p:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(91,94,244,.5)}
+.btn-s{background:transparent;color:var(--d);padding:.9rem 2rem;border-radius:50px;
+  font-size:1rem;font-weight:600;border:2px solid var(--lg);cursor:pointer;transition:all .25s}
+.btn-s:hover{border-color:var(--e);color:var(--e);transform:translateY(-3px)}
+
+/* CALL PREVIEW CARD */
+.preview-card{background:#fff;border-radius:24px;padding:6px;
+  box-shadow:0 30px 80px rgba(91,94,244,.15),0 0 0 1px rgba(91,94,244,.08);
+  max-width:460px;margin:0 auto 4rem;animation:hf 6s ease-in-out infinite}
+@keyframes hf{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.vs{background:linear-gradient(135deg,#1a1a3e,#0d0d2b,#1a0d33);
+  border-radius:20px;padding:18px;height:250px;
+  display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.vstars{position:absolute;inset:0;
+  background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.15)1px,transparent 1px),
+    radial-gradient(circle at 70% 60%,rgba(255,255,255,.1)1px,transparent 1px),
+    radial-gradient(circle at 40% 80%,rgba(255,255,255,.12)1px,transparent 1px)}
+.vavatars{display:flex;justify-content:center;align-items:center;gap:16px;flex:1;position:relative;z-index:1}
+.vav{width:80px;height:80px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.va1{background:linear-gradient(135deg,#5b5ef4,#8b5cf6);animation:vap 3s ease-in-out infinite}
+.va2{background:linear-gradient(135deg,#ff4d9e,#ff6b6b);animation:vap 3s 1s ease-in-out infinite}
+@keyframes vap{0%,100%{box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 0 0 rgba(91,94,244,.4)}50%{box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 0 8px rgba(91,94,244,.1)}}
+.vwave{display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;height:40px}
+.wb{height:4px;background:var(--g);border-radius:2px;animation:wa .8s ease-in-out infinite}
+.wb:nth-child(1){width:20px;animation-delay:0s}
+.wb:nth-child(2){width:28px;animation-delay:.15s}
+.wb:nth-child(3){width:16px;animation-delay:.3s}
+@keyframes wa{0%,100%{transform:scaleY(1);opacity:.6}50%{transform:scaleY(2.5);opacity:1}}
+.vbar{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.vstatus{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.7);font-size:.76rem}
+.slive{width:7px;height:7px;background:var(--g);border-radius:50%;animation:pd 1s infinite}
+.vctrls{display:flex;gap:8px}
+.vcb{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;cursor:pointer;transition:transform .2s}
+.vcb:hover{transform:scale(1.15)}
+
+/* ROOM SECTION */
+.room-section{background:var(--sw);padding:3rem 5%;display:flex;flex-direction:column;align-items:center;gap:1.5rem}
+.room-box{background:#fff;border-radius:24px;padding:2rem;max-width:560px;width:100%;
+  box-shadow:0 8px 32px rgba(91,94,244,.1);border:1px solid rgba(91,94,244,.1)}
+.room-title{font-family:'Clash Display',sans-serif;font-size:1.5rem;font-weight:700;text-align:center;margin-bottom:.3rem}
+.room-sub{font-size:.88rem;color:#666;text-align:center;margin-bottom:1.5rem}
+.room-inp{width:100%;padding:.85rem 1.1rem;border:2px solid var(--lg);border-radius:14px;
+  font-size:.95rem;font-family:inherit;outline:none;transition:border .2s;margin-bottom:.8rem}
+.room-inp:focus{border-color:var(--e)}
+.room-inp::placeholder{color:#aaa}
+.btn-start{width:100%;padding:1rem;background:var(--e);color:#fff;border:none;border-radius:14px;
+  font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s;
+  box-shadow:0 6px 20px rgba(91,94,244,.35)}
+.btn-start:hover{background:var(--ed);transform:translateY(-2px)}
+.divider{display:flex;align-items:center;gap:1rem;color:#aaa;font-size:.82rem;margin:.3rem 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--lg)}
+.btn-join{width:100%;padding:1rem;background:transparent;color:var(--e);border:2px solid var(--e);
+  border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s}
+.btn-join:hover{background:var(--sw);transform:translateY(-2px)}
+
+/* FEATURES */
+.feat-section{padding:4rem 5%;background:#fff}
+.sec-tag{display:inline-block;background:linear-gradient(135deg,rgba(91,94,244,.1),rgba(139,92,246,.1));
+  color:var(--e);padding:.35rem 1rem;border-radius:50px;font-size:.8rem;font-weight:600;
+  margin-bottom:.8rem;border:1px solid rgba(91,94,244,.2)}
+.sec-t{font-family:'Clash Display',sans-serif;font-size:clamp(1.8rem,3.5vw,2.5rem);
+  font-weight:700;margin-bottom:.8rem;line-height:1.2}
+.sec-s{font-size:1rem;color:#666;max-width:560px;margin:0 auto 2.5rem;line-height:1.7}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;max-width:1000px;margin:0 auto}
+.fc{background:#fff;border-radius:20px;padding:1.8rem;border:1px solid var(--lg);transition:all .3s}
+.fc:hover{transform:translateY(-8px);box-shadow:0 20px 40px rgba(91,94,244,.1);border-color:rgba(91,94,244,.25)}
+.fi{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;margin-bottom:1rem}
+.fi1{background:linear-gradient(135deg,rgba(91,94,244,.12),rgba(139,92,246,.12))}
+.fi2{background:linear-gradient(135deg,rgba(0,245,160,.12),rgba(0,200,255,.12))}
+.fi3{background:linear-gradient(135deg,rgba(255,77,158,.12),rgba(255,107,107,.12))}
+.fi4{background:linear-gradient(135deg,rgba(0,200,255,.12),rgba(91,94,244,.12))}
+.fi5{background:linear-gradient(135deg,rgba(255,170,0,.12),rgba(255,107,107,.12))}
+.fi6{background:linear-gradient(135deg,rgba(0,200,150,.12),rgba(0,200,255,.12))}
+.ft{font-family:'Clash Display',sans-serif;font-size:1.05rem;font-weight:600;margin-bottom:.4rem}
+.fd{font-size:.86rem;color:#666;line-height:1.6}
+
+/* PREMIUM */
+.prem-section{padding:4rem 5%;background:linear-gradient(135deg,#0d0d1a,#1a0d33);color:#fff;text-align:center;position:relative;overflow:hidden}
+.prem-section::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 30% 50%,rgba(91,94,244,.3),transparent 60%),
+    radial-gradient(circle at 70% 50%,rgba(255,77,158,.15),transparent 60%)}
+.prem-inner{position:relative;z-index:1}
+.prem-t{font-family:'Clash Display',sans-serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;margin-bottom:1rem}
+.prem-s{color:rgba(255,255,255,.65);font-size:1rem;margin-bottom:2rem;line-height:1.7}
+.prem-cards{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem}
+.pc{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:1.8rem;min-width:220px;max-width:240px;text-align:center;transition:all .3s}
+.pc:hover{border-color:rgba(91,94,244,.5);background:rgba(91,94,244,.1);transform:translateY(-8px)}
+.pc.hot{border-color:var(--g);background:rgba(0,245,160,.07)}
+.pc-icon{font-size:2.2rem;margin-bottom:.8rem}
+.pc-name{font-family:'Clash Display',sans-serif;font-size:1.05rem;font-weight:600;margin-bottom:.3rem}
+.pc-price{font-size:1.6rem;font-weight:700;color:var(--g);margin-bottom:.3rem}
+.pc-sub{font-size:.78rem;color:rgba(255,255,255,.5)}
+.btn-wa{display:inline-flex;align-items:center;gap:10px;
+  background:#25D366;color:#fff;padding:1rem 2.5rem;border-radius:50px;
+  font-size:1.05rem;font-weight:700;border:none;cursor:pointer;transition:all .25s;
+  box-shadow:0 8px 28px rgba(37,211,102,.4);text-decoration:none}
+.btn-wa:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(37,211,102,.5);background:#1ebe5a}
+.wa-note{margin-top:1rem;font-size:.82rem;color:rgba(255,255,255,.45)}
+
+/* FOOTER */
+footer{background:#0d0d1a;color:rgba(255,255,255,.5);padding:2rem 5%;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.f-logo{font-family:'Clash Display',sans-serif;color:#fff;font-weight:700;font-size:1.2rem;
+  display:flex;align-items:center;gap:6px}
+.f-links{display:flex;gap:1.5rem}
+.f-links a{color:rgba(255,255,255,.45);text-decoration:none;font-size:.82rem;transition:color .2s}
+.f-links a:hover{color:#fff}
+
+/* ─── CALL SCREEN ─── */
+#callscreen{flex-direction:column;background:#0d0d1a;height:100vh;overflow:hidden}
+
+.call-header{display:flex;align-items:center;justify-content:space-between;
+  padding:.9rem 1.5rem;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.07)}
+.call-logo{font-family:'Clash Display',sans-serif;color:#fff;font-size:1.2rem;font-weight:700;
+  display:flex;align-items:center;gap:6px}
+.room-info{display:flex;align-items:center;gap:8px}
+.room-id-badge{background:rgba(91,94,244,.2);color:#a5a7ff;padding:.35rem .9rem;
+  border-radius:50px;font-size:.78rem;font-weight:600;border:1px solid rgba(91,94,244,.3)}
+.call-timer{color:rgba(255,255,255,.5);font-size:.82rem;min-width:60px;text-align:right}
+
+.call-body{display:flex;flex:1;gap:0;overflow:hidden}
+
+/* VIDEO AREA */
+.video-area{flex:1;position:relative;background:#080816;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.remote-video-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
+#remoteVideo{width:100%;height:100%;object-fit:cover;background:#000}
+.remote-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;color:rgba(255,255,255,.5)}
+.rp-avatar{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:2.8rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff4d9e,#ff6b6b)}
+.rp-name{font-size:1.1rem;font-weight:600;color:rgba(255,255,255,.8)}
+.rp-status{font-size:.82rem;color:rgba(255,255,255,.4)}
+
+/* LOCAL VIDEO PIP */
+.local-pip{position:absolute;bottom:16px;right:16px;width:160px;height:110px;
+  border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.15);
+  box-shadow:0 8px 24px rgba(0,0,0,.5);cursor:move;z-index:10}
+#localVideo{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.local-placeholder{width:100%;height:100%;background:linear-gradient(135deg,#5b5ef4,#8b5cf6);
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff}
+
+/* STATUS OVERLAYS */
+.connecting-overlay{position:absolute;inset:0;background:rgba(8,8,22,.9);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;z-index:20}
+.spinner{width:50px;height:50px;border:3px solid rgba(91,94,244,.2);
+  border-top-color:var(--e);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.conn-text{color:rgba(255,255,255,.7);font-size:1rem;font-weight:500}
+.conn-sub{color:rgba(255,255,255,.4);font-size:.82rem;text-align:center;max-width:280px}
+
+/* INVITE OVERLAY */
+.invite-overlay{position:absolute;inset:0;background:rgba(8,8,22,.85);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;z-index:19;padding:2rem}
+.invite-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:2rem;max-width:380px;width:100%;text-align:center}
+.invite-title{font-family:'Clash Display',sans-serif;font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:.4rem}
+.invite-sub{color:rgba(255,255,255,.5);font-size:.85rem;margin-bottom:1.2rem;line-height:1.6}
+.invite-link{background:rgba(91,94,244,.15);border:1px solid rgba(91,94,244,.3);
+  border-radius:10px;padding:.7rem 1rem;font-size:.8rem;color:#a5a7ff;word-break:break-all;
+  margin-bottom:.8rem;text-align:left;cursor:pointer;transition:background .2s;user-select:all}
+.invite-link:hover{background:rgba(91,94,244,.25)}
+.btn-copy{width:100%;padding:.75rem;background:var(--e);color:#fff;border:none;border-radius:12px;
+  font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;margin-bottom:.6rem}
+.btn-copy:hover{background:var(--ed)}
+.btn-copy.copied{background:#00a060}
+.btn-share-wa{width:100%;padding:.75rem;background:#25D366;color:#fff;border:none;border-radius:12px;
+  font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-share-wa:hover{background:#1ebe5a}
+
+/* CALL CONTROLS */
+.call-controls{position:absolute;bottom:0;left:0;right:0;
+  padding:1rem 1.5rem;
+  background:linear-gradient(to top,rgba(8,8,22,.95),transparent);
+  display:flex;align-items:center;justify-content:center;gap:.9rem;z-index:15}
+.cc-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+  transition:all .2s;position:relative}
+.cc-btn:hover{transform:scale(1.1)}
+.cc-mic{background:rgba(255,255,255,.12);color:#fff}
+.cc-cam{background:rgba(255,255,255,.12);color:#fff}
+.cc-screen{background:rgba(255,255,255,.12);color:#fff}
+.cc-chat{background:rgba(255,255,255,.12);color:#fff}
+.cc-end{background:var(--r);color:#fff;width:60px;height:60px;font-size:1.4rem}
+.cc-btn.off{background:rgba(255,80,80,.2);color:var(--r)}
+.cc-badge{position:absolute;top:-2px;right:-2px;width:16px;height:16px;
+  background:var(--e);border-radius:50%;font-size:.6rem;color:#fff;
+  display:flex;align-items:center;justify-content:center;border:2px solid #0d0d1a}
+.cc-label{font-size:.65rem;color:rgba(255,255,255,.4);margin-top:3px;display:block;text-align:center}
+.ctrl-wrap{display:flex;flex-direction:column;align-items:center}
+
+/* CHAT PANEL */
+.chat-panel{width:0;background:rgba(255,255,255,.03);border-left:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;transition:width .3s;overflow:hidden}
+.chat-panel.open{width:320px}
+.chat-ph{padding:.9rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.07);
+  font-weight:600;font-size:.9rem;color:#fff;display:flex;align-items:center;justify-content:space-between}
+.chat-close{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:1.2rem;transition:color .2s}
+.chat-close:hover{color:#fff}
+.chat-msgs{flex:1;overflow-y:auto;padding:.8rem;display:flex;flex-direction:column;gap:.6rem}
+.chat-msgs::-webkit-scrollbar{width:4px}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+.cmsg{max-width:85%;padding:.6rem .9rem;border-radius:14px;font-size:.82rem;line-height:1.5;animation:mi .3s ease both}
+@keyframes mi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.cmsg.them{background:rgba(255,255,255,.09);color:rgba(255,255,255,.85);border-bottom-left-radius:4px;align-self:flex-start}
+.cmsg.me{background:var(--e);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+.cmsg-name{font-size:.68rem;color:rgba(255,255,255,.35);margin-bottom:2px}
+.cmsg-time{font-size:.65rem;opacity:.4;margin-top:2px;text-align:right}
+.chat-sys{text-align:center;font-size:.72rem;color:rgba(255,255,255,.3);padding:.2rem;font-style:italic}
+.chat-inp-row{padding:.7rem .8rem;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:.5rem;align-items:center}
+.chat-input{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:.55rem .9rem;font-size:.85rem;color:#fff;
+  outline:none;font-family:inherit;transition:border .2s}
+.chat-input::placeholder{color:rgba(255,255,255,.3)}
+.chat-input:focus{border-color:rgba(91,94,244,.5)}
+.chat-send-btn{width:36px;height:36px;border-radius:50%;background:var(--e);color:#fff;border:none;
+  cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.chat-send-btn:hover{background:var(--ed);transform:scale(1.1)}
+
+/* SCREEN SHARE INDICATOR */
+.screen-indicator{position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  background:rgba(91,94,244,.85);color:#fff;padding:.4rem 1rem;border-radius:50px;
+  font-size:.78rem;font-weight:600;z-index:16;display:none;backdrop-filter:blur(8px)}
+.screen-indicator.show{display:block}
+
+/* JOINING SCREEN */
+#joiningscreen{flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#0d0d1a,#1a1a3e);min-height:100vh;padding:2rem}
+.joining-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:24px;padding:2.5rem;max-width:420px;width:100%;text-align:center}
+.jc-logo{font-family:'Clash Display',sans-serif;font-size:1.5rem;color:var(--e);font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:1.5rem}
+.jc-title{font-family:'Clash Display',sans-serif;font-size:1.5rem;color:#fff;font-weight:700;margin-bottom:.4rem}
+.jc-sub{color:rgba(255,255,255,.5);font-size:.85rem;margin-bottom:1.5rem;line-height:1.6}
+.name-inp{width:100%;padding:.85rem 1.1rem;background:rgba(255,255,255,.07);
+  border:2px solid rgba(255,255,255,.1);border-radius:14px;
+  font-size:.95rem;color:#fff;font-family:inherit;outline:none;margin-bottom:.8rem;transition:border .2s}
+.name-inp::placeholder{color:rgba(255,255,255,.25)}
+.name-inp:focus{border-color:rgba(91,94,244,.5)}
+.btn-join-room{width:100%;padding:1rem;background:var(--e);color:#fff;border:none;border-radius:14px;
+  font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s;
+  box-shadow:0 6px 20px rgba(91,94,244,.4)}
+.btn-join-room:hover{background:var(--ed);transform:translateY(-2px)}
+.preview-local{width:100%;height:180px;border-radius:14px;overflow:hidden;background:#000;margin-bottom:1rem;position:relative}
+.preview-local video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.preview-local .no-cam{display:flex;align-items:center;justify-content:center;height:100%;
+  color:rgba(255,255,255,.3);font-size:.85rem;flex-direction:column;gap:.5rem}
+
+/* STATUS BAR */
+.status-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(13,13,26,.95);border-top:1px solid rgba(255,255,255,.06);
+  padding:.5rem 1rem;display:none;align-items:center;justify-content:center;gap:.5rem;
+  font-size:.78rem;color:rgba(255,255,255,.6)}
+.status-bar.show{display:flex}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:var(--g)}
+
+/* TOAST */
+.toast{position:fixed;top:80px;right:20px;z-index:500;
+  background:rgba(13,13,26,.95);color:#fff;
+  padding:.7rem 1.2rem;border-radius:12px;font-size:.85rem;font-weight:500;
+  border-left:4px solid var(--e);box-shadow:0 8px 24px rgba(0,0,0,.3);
+  transform:translateX(120%);transition:transform .3s;max-width:300px}
+.toast.show{transform:translateX(0)}
+.toast.success{border-color:var(--g)}
+.toast.error{border-color:var(--r)}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .chat-panel.open{width:100%;position:absolute;top:0;right:0;bottom:0;z-index:18}
+  .feats{grid-template-columns:1fr}
+  .prem-cards{flex-direction:column;align-items:center}
+  .local-pip{width:110px;height:80px}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast"></div>
+
+<!-- ─── LANDING SCREEN ─── -->
+<section class="screen active" id="landing">
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="logo" onclick="showLanding()"><div class="logo-dot"></div>HelloCall</a>
+    <button class="nav-cta" onclick="scrollToRoom()">Start Free Call →</button>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-bg">
+      <div class="grid-bg"></div>
+      <div class="orb o1"></div>
+      <div class="orb o2"></div>
+      <div class="orb o3"></div>
+    </div>
+    <div class="hero-inner">
+      <div class="badge"><div class="bdot"></div>🔥 Real WebRTC Video Calls — No App Needed</div>
+      <h1>Talk. See.<br><span class="grad">Connect Anyone.</span></h1>
+      <p>HelloCall gives you real HD video calls and live chat — right in your browser. Share a link, your friend clicks it, and you're live. That simple.</p>
+      <div class="hero-btns">
+        <button class="btn-p" onclick="scrollToRoom()">📹 Start Video Call Now</button>
+        <button class="btn-s" onclick="document.getElementById('feat-sec').scrollIntoView({behavior:'smooth'})">✨ See Features</button>
+      </div>
+
+      <!-- ANIMATED CALL CARD -->
+      <div class="preview-card">
+        <div class="vs">
+          <div class="vstars"></div>
+          <div class="vbar">
+            <div class="vstatus"><div class="slive"></div>Live • 04:27 · HD 1080p</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.35)">🔒 Encrypted</div>
+          </div>
+          <div class="vavatars">
+            <div class="vav va1">A</div>
+            <div class="vwave"><div class="wb"></div><div class="wb"></div><div class="wb"></div></div>
+            <div class="vav va2">Z</div>
+          </div>
+          <div class="vbar">
+            <div class="vstatus">Arjun & Zara on call</div>
+            <div class="vctrls">
+              <div class="vcb">🎙️</div><div class="vcb">📷</div>
+              <div class="vcb">💬</div><div class="vcb" style="background:rgba(255,60,60,.3)">📵</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOM / START CALL -->
+  <div class="room-section" id="roomsec">
+    <div class="room-box">
+      <div class="room-title">🚀 Start a New Call</div>
+      <div class="room-sub">Create a room, share the link with anyone — they join instantly, no account needed.</div>
+      <input class="room-inp" id="yourName" placeholder="Your name (e.g. Arjun)" maxlength="30">
+      <button class="btn-start" onclick="createRoom()">📹 Create My Room & Start Call</button>
+      <div class="divider">or join existing room</div>
+      <input class="room-inp" id="joinRoomId" placeholder="Paste Room ID here (e.g. HC-xxxx)">
+      <button class="btn-join" onclick="joinRoom()">🔗 Join Room</button>
+    </div>
+    <div style="font-size:.8rem;color:#888;text-align:center;max-width:420px;line-height:1.6">
+      💡 <strong>How it works:</strong> You create a room → Share the Room ID or link → Your friend joins → Real video call starts. Uses WebRTC — peer-to-peer, end-to-end encrypted.
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="feat-section" id="feat-sec">
+    <div style="text-align:center">
+      <div class="sec-tag">⚡ Real Features</div>
+      <h2 class="sec-t">Everything packed in, <span style="color:var(--e)">all working</span></h2>
+      <p class="sec-s">HelloCall uses real WebRTC technology — the same tech powering Google Meet & WhatsApp calls.</p>
+    </div>
+    <div class="feats">
+      <div class="fc"><div class="fi fi1">📹</div><div class="ft">Real HD Video Calls</div><div class="fd">Browser-to-browser WebRTC calls with no app download. Crystal clear up to 1080p based on your connection speed.</div></div>
+      <div class="fc"><div class="fi fi2">💬</div><div class="ft">Live In-Call Chat</div><div class="fd">Send messages while on a call. Chat history stays for the duration of the call. Works even if camera is off.</div></div>
+      <div class="fc"><div class="fi fi3">🖥️</div><div class="ft">Real Screen Sharing</div><div class="fd">Share your entire screen, a window, or a browser tab with one click. Works in Chrome, Edge, and Firefox.</div></div>
+      <div class="fc"><div class="fi fi4">🔒</div><div class="ft">Peer-to-Peer Encrypted</div><div class="fd">All video, audio & chat goes directly device-to-device. No server stores your call content. Private by design.</div></div>
+      <div class="fc"><div class="fi fi5">🔗</div><div class="ft">Instant Share Link</div><div class="fd">One-click copy your room link or share directly on WhatsApp. Anyone can join — no account, no download needed.</div></div>
+      <div class="fc"><div class="fi fi6">📱</div><div class="ft">Works on Any Device</div><div class="fd">Mobile, tablet, laptop, desktop — any browser works. Chrome and Edge give the best experience with all features.</div></div>
+    </div>
+  </div>
+
+  <!-- PREMIUM -->
+  <div class="prem-section" id="premium">
+    <div class="prem-inner">
+      <div class="sec-tag" style="background:rgba(91,94,244,.2);color:#a5a7ff">💎 Premium Plans</div>
+      <h2 class="prem-t">Want more? Go <span style="color:var(--g)">Premium</span></h2>
+      <p class="prem-s">Free plan includes unlimited 1-on-1 calls. Premium unlocks group calls, custom room names, call recording, priority support, and more.</p>
+      <div class="prem-cards">
+        <div class="pc">
+          <div class="pc-icon">🆓</div>
+          <div class="pc-name">Free</div>
+          <div class="pc-price">₹0</div>
+          <div class="pc-sub">1-on-1 calls · Live chat · Screen share</div>
+        </div>
+        <div class="pc hot">
+          <div class="pc-icon">🔥</div>
+          <div class="pc-name">Pro</div>
+          <div class="pc-price">₹199/mo</div>
+          <div class="pc-sub">Group calls up to 10 · Recording · Custom room · No ads</div>
+        </div>
+        <div class="pc">
+          <div class="pc-icon">🏢</div>
+          <div class="pc-name">Team</div>
+          <div class="pc-price">₹499/mo</div>
+          <div class="pc-sub">Up to 50 users · Admin panel · Webinar · Branding</div>
+        </div>
+      </div>
+      <a href="https://wa.me/917505640600?text=Hi%2C%20I%20want%20to%20know%20more%20about%20HelloCall%20Premium%20plans%20%F0%9F%91%8B" target="_blank" class="btn-wa">
+        <span style="font-size:1.3rem">💬</span> Chat on WhatsApp for Premium Details
+      </a>
+      <div class="wa-note">📞 +91 75056 40600 · Usually replies within 1 hour</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="f-logo"><div class="logo-dot"></div>HelloCall</div>
+    <div style="font-size:.82rem">Real WebRTC video calls in your browser. Free forever.</div>
+    <div class="f-links">
+      <a href="#" onclick="scrollToRoom()">Start Call</a>
+      <a href="#premium">Premium</a>
+      <a href="https://wa.me/917505640600" target="_blank">Support</a>
+    </div>
+  </footer>
+</section>
+
+<!-- ─── JOINING SCREEN ─── -->
+<section class="screen" id="joiningscreen">
+  <div class="joining-card">
+    <div class="jc-logo"><div class="logo-dot"></div>HelloCall</div>
+    <div class="jc-title">📹 Join Call</div>
+    <div class="jc-sub" id="joiningMsg">You've been invited to a HelloCall room. Enter your name and allow camera access to join.</div>
+    <div class="preview-local">
+      <video id="previewVideo" autoplay muted playsinline></video>
+      <div class="no-cam" id="noCamMsg" style="display:none">📷 Camera access needed<br><span style="font-size:.72rem">Allow camera in browser popup</span></div>
+    </div>
+    <input class="name-inp" id="joinerName" placeholder="Your name (e.g. Zara)" maxlength="30">
+    <button class="btn-join-room" id="joinBtn" onclick="enterRoom()">✅ Join Now</button>
+    <div style="margin-top:.8rem;font-size:.74rem;color:rgba(255,255,255,.3);text-align:center">
+      Your camera preview is only visible to you until you join
+    </div>
+  </div>
+</section>
+
+<!-- ─── CALL SCREEN ─── -->
+<section class="screen" id="callscreen">
+
+  <!-- CALL HEADER -->
+  <div class="call-header">
+    <div class="call-logo"><div class="logo-dot"></div>HelloCall</div>
+    <div class="room-info">
+      <div class="room-id-badge" id="roomIdDisplay">Room: —</div>
+      <div style="font-size:.72rem;color:rgba(255,255,255,.3)" id="connStatus">Waiting...</div>
+    </div>
+    <div class="call-timer" id="callTimer">00:00</div>
+  </div>
+
+  <!-- BODY -->
+  <div class="call-body">
+
+    <!-- VIDEO AREA -->
+    <div class="video-area" id="videoArea">
+
+      <!-- REMOTE VIDEO -->
+      <div class="remote-video-wrap">
+        <video id="remoteVideo" autoplay playsinline style="display:none"></video>
+        <div class="remote-placeholder" id="remotePlaceholder">
+          <div class="rp-avatar" id="remoteAvatar">?</div>
+          <div class="rp-name" id="remoteNameDisplay">Waiting for someone...</div>
+          <div class="rp-status" id="remoteStatus">Share the room link to invite</div>
+        </div>
+      </div>
+
+      <!-- LOCAL PIP -->
+      <div class="local-pip" id="localPip">
+        <video id="localVideo" autoplay muted playsinline></video>
+        <div class="local-placeholder" id="localPlaceholder" style="display:none">
+          <span id="myInitial">Y</span>
+        </div>
+      </div>
+
+      <!-- SCREEN SHARE INDICATOR -->
+      <div class="screen-indicator" id="screenIndicator">🖥️ You are sharing your screen</div>
+
+      <!-- CONNECTING OVERLAY -->
+      <div class="connecting-overlay" id="connectingOverlay">
+        <div class="spinner"></div>
+        <div class="conn-text" id="connectingText">Setting up your room...</div>
+        <div class="conn-sub" id="connectingSub">Getting camera & microphone access</div>
+      </div>
+
+      <!-- INVITE OVERLAY (shown when waiting for peer) -->
+      <div class="invite-overlay" id="inviteOverlay" style="display:none">
+        <div class="invite-card">
+          <div class="invite-title">📨 Invite Someone</div>
+          <div class="invite-sub">Share this Room ID or link with whoever you want to call. They click, enter name, and you're live!</div>
+          <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:.3rem;text-align:left">Room ID (share this):</div>
+          <div class="invite-link" id="inviteLinkDisplay" onclick="copyRoomId()"></div>
+          <button class="btn-copy" id="copyBtn" onclick="copyRoomId()">📋 Copy Room Link</button>
+          <a id="waShareBtn" href="#" target="_blank" class="btn-share-wa">
+            <span>💬</span> Share on WhatsApp
+          </a>
+          <div style="margin-top:.8rem;font-size:.72rem;color:rgba(255,255,255,.3)">Waiting for them to join...</div>
+        </div>
+      </div>
+
+      <!-- CALL CONTROLS -->
+      <div class="call-controls">
+        <div class="ctrl-wrap">
+          <button class="cc-btn cc-mic" id="micBtn" onclick="toggleMic()" title="Mute/Unmute">🎙️</button>
+          <span class="cc-label">Mic</span>
+        </div>
+        <div class="ctrl-wrap">
+          <button class="cc-btn cc-cam" id="camBtn" onclick="toggleCam()" title="Camera On/Off">📷</button>
+          <span class="cc-label">Camera</span>
+        </div>
+        <div class="ctrl-wrap">
+          <button class="cc-btn cc-screen" id="screenBtn" onclick="toggleScreen()" title="Share Screen">🖥️</button>
+          <span class="cc-label">Screen</span>
+        </div>
+        <div class="ctrl-wrap">
+          <button class="cc-btn cc-chat" id="chatBtn" onclick="toggleChat()" title="Chat">
+            💬<span class="cc-badge" id="chatBadge" style="display:none">0</span>
+          </button>
+          <span class="cc-label">Chat</span>
+        </div>
+        <div class="ctrl-wrap">
+          <button class="cc-btn cc-end" onclick="endCall()" title="End Call">📵</button>
+          <span class="cc-label">End</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div class="chat-panel" id="chatPanel">
+      <div class="chat-ph">
+        <span>💬 Live Chat</span>
+        <button class="chat-close" onclick="toggleChat()">✕</button>
+      </div>
+      <div class="chat-msgs" id="chatMsgs"></div>
+      <div class="chat-inp-row">
+        <input class="chat-input" id="chatInput" placeholder="Type message..." maxlength="500"
+          onkeydown="if(event.key==='Enter')sendChatMsg()">
+        <button class="chat-send-btn" onclick="sendChatMsg()">➤</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="status-bar" id="statusBar"><div class="sb-dot"></div><span id="statusText">Connected</span></div>
+
+<script>
+// ─── STATE ───
+let localStream = null;
+let peer = null;
+let currentCall = null;
+let currentConn = null;
+let myName = 'You';
+let myRoomId = '';
+let remoteName = 'Friend';
+let micOn = true, camOn = true;
+let screenSharing = false;
+let screenStream = null;
+let callTimerInterval = null;
+let callSeconds = 0;
+let chatOpen = false;
+let unreadMsgs = 0;
+let isHost = false;
+let pendingRoomId = null;
+
+// ─── SCREEN UTILS ───
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showLanding(){
+  endCall();
+  showScreen('landing');
+  window.history.replaceState({},document.title,window.location.pathname);
+}
+function scrollToRoom(){document.getElementById('roomsec').scrollIntoView({behavior:'smooth'})}
+
+// ─── TOAST ───
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+(type||'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ─── PEER SETUP ───
+function initPeer(forcedId){
+  return new Promise((resolve,reject)=>{
+    const opts={debug:0,config:{iceServers:[
+      {urls:'stun:stun.l.google.com:19302'},
+      {urls:'stun:stun1.l.google.com:19302'},
+      {urls:'stun:stun2.l.google.com:19302'},
+      {urls:'stun:global.xirsys.com',credential:'free',username:'free'}
+    ]}};
+    peer = forcedId ? new Peer(forcedId,opts) : new Peer(opts);
+    peer.on('open',id=>{console.log('Peer ID:',id);resolve(id)});
+    peer.on('error',err=>{console.error('Peer error:',err);reject(err)});
+    peer.on('call',handleIncomingCall);
+    peer.on('connection',handleIncomingConn);
+  });
+}
+
+// ─── GET MEDIA ───
+async function getMedia(){
+  try{
+    localStream = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720}},audio:true});
+    return true;
+  }catch(e){
+    try{
+      localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+      return true;
+    }catch(e2){
+      try{
+        localStream = await navigator.mediaDevices.getUserMedia({audio:true});
+        toast('Camera not available — audio only call','');
+        return true;
+      }catch(e3){
+        toast('Camera & mic access denied. Please allow in browser settings.','error');
+        return false;
+      }
+    }
+  }
+}
+
+// ─── CREATE ROOM (HOST) ───
+async function createRoom(){
+  const name = document.getElementById('yourName').value.trim()||'You';
+  myName = name;
+  isHost = true;
+
+  showScreen('callscreen');
+  document.getElementById('connectingOverlay').style.display='flex';
+  document.getElementById('connectingText').textContent='Setting up your room...';
+  document.getElementById('connectingSub').textContent='Getting camera & microphone access';
+
+  const gotMedia = await getMedia();
+  if(!gotMedia){ showScreen('landing'); return; }
+
+  attachLocalStream();
+
+  document.getElementById('connectingSub').textContent='Creating secure room...';
+
+  try{
+    const roomId = await initPeer();
+    myRoomId = roomId;
+    document.getElementById('roomIdDisplay').textContent = 'Room: '+roomId.substring(0,12)+'...';
+    document.getElementById('connectingOverlay').style.display='none';
+    document.getElementById('inviteOverlay').style.display='flex';
+
+    const shareUrl = window.location.origin + window.location.pathname + '?room=' + roomId;
+    document.getElementById('inviteLinkDisplay').textContent = shareUrl;
+    document.getElementById('waShareBtn').href =
+      'https://wa.me/?text='+encodeURIComponent('Join my HelloCall video call! Click: '+shareUrl+'\n\nRoom ID: '+roomId);
+
+    startTimer();
+    setStatus('🟢 Room ready — waiting for someone to join');
+    toast('Room created! Share the link to invite someone','success');
+
+    // URL update for sharing
+    window.history.pushState({room:roomId},'',window.location.pathname+'?room='+roomId);
+
+    // Also listen for join requests via data connection
+    peer.on('connection', conn => {
+      currentConn = conn;
+      setupConnListeners(conn);
+    });
+
+  }catch(e){
+    console.error(e);
+    toast('Could not create room. Check internet connection.','error');
+    showScreen('landing');
+  }
+}
+
+// ─── JOIN ROOM (GUEST) ───
+function joinRoom(){
+  const rid = document.getElementById('joinRoomId').value.trim();
+  if(!rid){ toast('Enter a Room ID first','error'); return; }
+  openJoiningScreen(rid);
+}
+
+function openJoiningScreen(roomId){
+  pendingRoomId = roomId;
+  showScreen('joiningscreen');
+  document.getElementById('joiningMsg').textContent =
+    'Room ID: '+roomId.substring(0,20)+'... — Enter your name and allow camera to join.';
+  startPreviewCamera();
+}
+
+async function startPreviewCamera(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    const pv = document.getElementById('previewVideo');
+    pv.srcObject = stream;
+    localStream = stream;
+  }catch(e){
+    document.getElementById('noCamMsg').style.display='flex';
+  }
+}
+
+async function enterRoom(){
+  const name = document.getElementById('joinerName').value.trim()||'Guest';
+  myName = name;
+  isHost = false;
+  const rid = pendingRoomId;
+
+  if(!localStream){
+    const ok = await getMedia();
+    if(!ok){ toast('Need camera/mic to join','error'); return; }
+  }
+
+  document.getElementById('joinBtn').disabled=true;
+  document.getElementById('joinBtn').textContent='Connecting...';
+  showScreen('callscreen');
+
+  document.getElementById('connectingOverlay').style.display='flex';
+  document.getElementById('connectingText').textContent='Connecting to room...';
+  document.getElementById('connectingSub').textContent='Establishing peer connection';
+
+  attachLocalStream();
+
+  try{
+    const myId = await initPeer();
+    myRoomId = rid;
+    document.getElementById('roomIdDisplay').textContent = 'Room: '+rid.substring(0,12)+'...';
+
+    // Data connection for signaling/chat
+    const conn = peer.connect(rid, {metadata:{name:myName}});
+    currentConn = conn;
+    setupConnListeners(conn);
+
+    conn.on('open',()=>{
+      conn.send({type:'hello',name:myName});
+    });
+
+    // Make call
+    setTimeout(()=>{
+      const call = peer.call(rid, localStream, {metadata:{name:myName}});
+      currentCall = call;
+      call.on('stream', remoteStream => {
+        document.getElementById('connectingOverlay').style.display='none';
+        document.getElementById('inviteOverlay').style.display='none';
+        showRemoteStream(remoteStream, name);
+      });
+      call.on('close',()=>{ toast('Call ended by remote',''); endCall(); });
+      call.on('error',e=>{ toast('Call error: '+e,'error'); });
+    }, 1200);
+
+    startTimer();
+    setStatus('🟡 Connecting to room...');
+
+  }catch(e){
+    console.error(e);
+    toast('Could not connect. Check the Room ID.','error');
+    showScreen('landing');
+  }
+}
+
+// ─── HANDLE INCOMING ───
+function handleIncomingCall(call){
+  console.log('Incoming call from',call.peer);
+  remoteName = call.metadata?.name || 'Someone';
+  currentCall = call;
+  call.answer(localStream);
+  call.on('stream', remoteStream => {
+    document.getElementById('connectingOverlay').style.display='none';
+    document.getElementById('inviteOverlay').style.display='none';
+    showRemoteStream(remoteStream, remoteName);
+    setStatus('🟢 Connected with '+remoteName);
+    toast(remoteName+' joined the call! 🎉','success');
+    addSysMsg(remoteName+' joined the room');
+  });
+  call.on('close',()=>{ toast('Call ended',''); endCall(); });
+}
+
+function handleIncomingConn(conn){
+  currentConn = conn;
+  remoteName = conn.metadata?.name || 'Someone';
+  setupConnListeners(conn);
+}
+
+function setupConnListeners(conn){
+  conn.on('open',()=>{ console.log('Data connection open'); });
+  conn.on('data', data => {
+    if(data.type==='hello'){
+      remoteName = data.name||'Friend';
+      updateRemoteName(remoteName);
+      addSysMsg(remoteName+' is connected');
+      setStatus('🟢 Connected with '+remoteName);
+    } else if(data.type==='chat'){
+      receiveChatMsg(data.name, data.msg);
+    } else if(data.type==='camOff'){
+      showRemotePlaceholder(true, data.name||remoteName);
+    } else if(data.type==='camOn'){
+      showRemotePlaceholder(false, data.name||remoteName);
+    } else if(data.type==='bye'){
+      toast(remoteName+' left the call','');
+      addSysMsg(remoteName+' left the call');
+      hangupRemote();
+    }
+  });
+  conn.on('close',()=>{ addSysMsg('Peer disconnected'); });
+}
+
+// ─── STREAM MANAGEMENT ───
+function attachLocalStream(){
+  const lv = document.getElementById('localVideo');
+  if(localStream){
+    lv.srcObject = localStream;
+    const vt = localStream.getVideoTracks();
+    if(!vt.length || !vt[0].enabled){
+      document.getElementById('localPlaceholder').style.display='flex';
+      lv.style.display='none';
+    }
+  }
+  const init = myName.charAt(0).toUpperCase();
+  document.getElementById('myInitial').textContent = init;
+}
+
+function showRemoteStream(stream, name){
+  const rv = document.getElementById('remoteVideo');
+  rv.srcObject = stream;
+  rv.style.display='block';
+  document.getElementById('remotePlaceholder').style.display='none';
+  updateRemoteName(name);
+  setStatus('🟢 Connected with '+name);
+}
+
+function showRemotePlaceholder(show, name){
+  const rv = document.getElementById('remoteVideo');
+  const rp = document.getElementById('remotePlaceholder');
+  if(show){
+    rv.style.display='none'; rp.style.display='flex';
+    document.getElementById('remoteAvatar').textContent = (name||remoteName).charAt(0).toUpperCase();
+    document.getElementById('remoteNameDisplay').textContent = (name||remoteName)+' (camera off)';
+  } else {
+    if(rv.srcObject){ rv.style.display='block'; rp.style.display='none'; }
+  }
+}
+
+function updateRemoteName(name){
+  remoteName = name||'Friend';
+  document.getElementById('remoteAvatar').textContent = remoteName.charAt(0).toUpperCase();
+  document.getElementById('remoteNameDisplay').textContent = remoteName;
+  document.getElementById('remoteStatus').textContent = 'On call';
+}
+
+// ─── CONTROLS ───
+function toggleMic(){
+  if(!localStream) return;
+  const at = localStream.getAudioTracks();
+  if(!at.length){ toast('No microphone found','error'); return; }
+  micOn = !micOn;
+  at.forEach(t => t.enabled = micOn);
+  const btn = document.getElementById('micBtn');
+  btn.textContent = micOn ? '🎙️' : '🔇';
+  btn.className = 'cc-btn cc-mic' + (micOn?'':' off');
+  toast(micOn ? 'Microphone ON' : 'Microphone OFF');
+}
+
+function toggleCam(){
+  if(!localStream) return;
+  const vt = localStream.getVideoTracks();
+  if(!vt.length){ toast('No camera found','error'); return; }
+  camOn = !camOn;
+  vt.forEach(t => t.enabled = camOn);
+  const lv = document.getElementById('localVideo');
+  const lp = document.getElementById('localPlaceholder');
+  lv.style.display = camOn ? 'block' : 'none';
+  lp.style.display = camOn ? 'none' : 'flex';
+  const btn = document.getElementById('camBtn');
+  btn.textContent = camOn ? '📷' : '🚫';
+  btn.className = 'cc-btn cc-cam'+(camOn?'':' off');
+  // Notify peer
+  if(currentConn && currentConn.open)
+    currentConn.send({type: camOn ? 'camOn' : 'camOff', name: myName});
+  toast(camOn ? 'Camera ON' : 'Camera OFF');
+}
+
+async function toggleScreen(){
+  if(screenSharing){
+    // Stop screen share, restore camera
+    if(screenStream){ screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
+    screenSharing = false;
+    document.getElementById('screenBtn').className='cc-btn cc-screen';
+    document.getElementById('screenIndicator').classList.remove('show');
+    // Restore camera video track
+    const gotMedia = await getMedia();
+    if(gotMedia && currentCall){
+      const sender = currentCall.peerConnection?.getSenders?.()?.find(s=>s.track?.kind==='video');
+      if(sender){
+        const vt = localStream.getVideoTracks()[0];
+        if(vt) sender.replaceTrack(vt);
+      }
+    }
+    attachLocalStream();
+    toast('Screen sharing stopped');
+  } else {
+    try{
+      screenStream = await navigator.mediaDevices.getDisplayMedia({video:{cursor:'always'},audio:true});
+      screenSharing = true;
+      // Replace video track in call
+      if(currentCall){
+        const sender = currentCall.peerConnection?.getSenders?.()?.find(s=>s.track?.kind==='video');
+        if(sender){
+          const vt = screenStream.getVideoTracks()[0];
+          if(vt) sender.replaceTrack(vt);
+        }
+      }
+      // Show screen in local pip
+      const lv = document.getElementById('localVideo');
+      lv.srcObject = screenStream;
+      lv.style.display='block';
+      document.getElementById('localPlaceholder').style.display='none';
+      document.getElementById('screenBtn').className='cc-btn cc-screen off';
+      document.getElementById('screenIndicator').classList.add('show');
+      screenStream.getVideoTracks()[0].onended = ()=>{ if(screenSharing) toggleScreen(); };
+      toast('Screen sharing started','success');
+    }catch(e){
+      if(e.name!=='NotAllowedError') toast('Screen share error: '+e.message,'error');
+    }
+  }
+}
+
+function toggleChat(){
+  chatOpen = !chatOpen;
+  const panel = document.getElementById('chatPanel');
+  const btn = document.getElementById('chatBtn');
+  panel.classList.toggle('open', chatOpen);
+  btn.className = 'cc-btn cc-chat' + (chatOpen?' ':' ');
+  if(chatOpen){
+    unreadMsgs = 0;
+    document.getElementById('chatBadge').style.display='none';
+    document.getElementById('chatInput').focus();
+  }
+}
+
+function endCall(){
+  if(currentConn && currentConn.open) currentConn.send({type:'bye',name:myName});
+  hangupRemote();
+  if(peer && !peer.destroyed){ peer.destroy(); peer=null; }
+  if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
+  if(screenStream){ screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
+  clearInterval(callTimerInterval);
+  showScreen('landing');
+  // reset
+  document.getElementById('remoteVideo').srcObject=null;
+  document.getElementById('remoteVideo').style.display='none';
+  document.getElementById('remotePlaceholder').style.display='flex';
+  document.getElementById('chatMsgs').innerHTML='';
+  document.getElementById('connectingOverlay').style.display='flex';
+  document.getElementById('inviteOverlay').style.display='none';
+  chatOpen=false; document.getElementById('chatPanel').classList.remove('open');
+  callSeconds=0; micOn=true; camOn=true; screenSharing=false;
+  document.getElementById('micBtn').textContent='🎙️';
+  document.getElementById('micBtn').className='cc-btn cc-mic';
+  document.getElementById('camBtn').textContent='📷';
+  document.getElementById('camBtn').className='cc-btn cc-cam';
+  document.getElementById('screenBtn').className='cc-btn cc-screen';
+  document.getElementById('screenIndicator').classList.remove('show');
+  document.getElementById('chatBadge').style.display='none';
+  unreadMsgs=0;
+}
+
+function hangupRemote(){
+  if(currentCall){ currentCall.close(); currentCall=null; }
+  if(currentConn){ currentConn.close(); currentConn=null; }
+}
+
+// ─── CHAT ───
+function sendChatMsg(){
+  const inp = document.getElementById('chatInput');
+  const msg = inp.value.trim();
+  if(!msg) return;
+  inp.value = '';
+  addChatMsg(myName, msg, true);
+  if(currentConn && currentConn.open) currentConn.send({type:'chat',name:myName,msg});
+  else toast('Not connected yet — message not sent','error');
+}
+
+function receiveChatMsg(name, msg){
+  addChatMsg(name, msg, false);
+  if(!chatOpen){
+    unreadMsgs++;
+    const badge = document.getElementById('chatBadge');
+    badge.textContent = unreadMsgs > 9 ? '9+' : unreadMsgs;
+    badge.style.display='flex';
+  }
+}
+
+function addChatMsg(name, msg, isMe){
+  const msgs = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = 'cmsg ' + (isMe?'me':'them');
+  const now = new Date();
+  const timeStr = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  d.innerHTML = (isMe?'':('<div class="cmsg-name">'+escHtml(name)+'</div>'))
+    + escHtml(msg)
+    + '<div class="cmsg-time">'+timeStr+'</div>';
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addSysMsg(text){
+  const msgs = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = 'chat-sys'; d.textContent = text;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function escHtml(str){ const d=document.createElement('div');d.textContent=str;return d.innerHTML; }
+
+// ─── TIMER ───
+function startTimer(){
+  callTimerInterval = setInterval(()=>{
+    callSeconds++;
+    const m=Math.floor(callSeconds/60), s=callSeconds%60;
+    document.getElementById('callTimer').textContent =
+      String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  },1000);
+}
+
+// ─── STATUS ───
+function setStatus(txt){
+  document.getElementById('connStatus').textContent=txt;
+  const sb = document.getElementById('statusBar');
+  document.getElementById('statusText').textContent=txt;
+  sb.classList.add('show');
+  setTimeout(()=>sb.classList.remove('show'),4000);
+}
+
+// ─── COPY ROOM ID ───
+function copyRoomId(){
+  const url = window.location.origin + window.location.pathname + '?room=' + myRoomId;
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn = document.getElementById('copyBtn');
+    btn.textContent='✅ Copied!'; btn.className='btn-copy copied';
+    setTimeout(()=>{ btn.textContent='📋 Copy Room Link'; btn.className='btn-copy'; },2500);
+    toast('Room link copied! Share it with your friend 🎉','success');
+  }).catch(()=>{
+    // Fallback
+    const ta=document.createElement('textarea');
+    ta.value=url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast('Copied!','success');
+  });
+}
+
+// ─── CHECK URL PARAMS ───
+function checkUrlParams(){
+  const params = new URLSearchParams(window.location.search);
+  const roomId = params.get('room');
+  if(roomId){ openJoiningScreen(roomId); }
+}
+
+// ─── INIT ───
+document.addEventListener('DOMContentLoaded',()=>{
+  checkUrlParams();
+
+  // Enter key on landing inputs
+  document.getElementById('yourName')?.addEventListener('keydown',e=>{ if(e.key==='Enter') createRoom(); });
+  document.getElementById('joinRoomId')?.addEventListener('keydown',e=>{ if(e.key==='Enter') joinRoom(); });
+  document.getElementById('joinerName')?.addEventListener('keydown',e=>{ if(e.key==='Enter') enterRoom(); });
+
+  // Handle browser back
+  window.addEventListener('popstate',()=>{ showLanding(); });
+});
+</script>
+</body>
+</html>
