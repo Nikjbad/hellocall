@@ -351,7 +351,7 @@ footer{background:#0d0d1a;color:rgba(255,255,255,.5);padding:2rem 5%;
 
   <!-- NAV -->
   <nav>
-    <a href="#" class="logo" onclick="showLanding()"><div class="logo-dot"></div>HelloCall</a>
+    <a href="#" class="logo" onclick="goHome(event)"><div class="logo-dot"></div>HelloCall</a>
     <button class="nav-cta" onclick="scrollToRoom()">Start Free Call →</button>
   </nav>
 
@@ -620,59 +620,106 @@ let unreadMsgs = 0;
 let isHost = false;
 let pendingRoomId = null;
 
+// FIX: track whether we are in an active call so popstate knows what to do
+let inActiveCall = false;
+
 // ─── SCREEN UTILS ───
 function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-function showLanding(){
-  endCall();
-  showScreen('landing');
-  window.history.replaceState({},document.title,window.location.pathname);
+
+// FIX: goHome prevents default link navigation and uses our own cleanup
+function goHome(e){
+  if(e) e.preventDefault();
+  cleanupAndGoLanding();
 }
-function scrollToRoom(){document.getElementById('roomsec').scrollIntoView({behavior:'smooth'})}
+
+function showLanding(){
+  cleanupAndGoLanding();
+}
+
+function cleanupAndGoLanding(){
+  inActiveCall = false;
+  stopAllMedia();
+  if(peer && !peer.destroyed){ peer.destroy(); peer = null; }
+  clearInterval(callTimerInterval);
+  resetCallUI();
+  showScreen('landing');
+  // FIX: Remove the ?room= param from URL without triggering popstate
+  window.history.replaceState({page:'landing'}, document.title, window.location.pathname);
+}
+
+function scrollToRoom(){ document.getElementById('roomsec').scrollIntoView({behavior:'smooth'}); }
+
+// ─── STOP ALL MEDIA ───
+function stopAllMedia(){
+  if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if(screenStream){ screenStream.getTracks().forEach(t => t.stop()); screenStream = null; }
+  if(currentCall){ currentCall.close(); currentCall = null; }
+  if(currentConn){ currentConn.close(); currentConn = null; }
+  // Stop preview video too
+  const pv = document.getElementById('previewVideo');
+  if(pv && pv.srcObject){
+    pv.srcObject.getTracks().forEach(t => t.stop());
+    pv.srcObject = null;
+  }
+}
 
 // ─── TOAST ───
-function toast(msg,type=''){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast '+(type||'');
+function toast(msg, type=''){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type||'');
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 // ─── PEER SETUP ───
 function initPeer(forcedId){
-  return new Promise((resolve,reject)=>{
-    const opts={debug:0,config:{iceServers:[
-      {urls:'stun:stun.l.google.com:19302'},
-      {urls:'stun:stun1.l.google.com:19302'},
-      {urls:'stun:stun2.l.google.com:19302'},
-      {urls:'stun:global.xirsys.com',credential:'free',username:'free'}
-    ]}};
-    peer = forcedId ? new Peer(forcedId,opts) : new Peer(opts);
-    peer.on('open',id=>{console.log('Peer ID:',id);resolve(id)});
-    peer.on('error',err=>{console.error('Peer error:',err);reject(err)});
-    peer.on('call',handleIncomingCall);
-    peer.on('connection',handleIncomingConn);
+  return new Promise((resolve, reject) => {
+    const opts = {
+      debug: 0,
+      config: {
+        iceServers: [
+          {urls: 'stun:stun.l.google.com:19302'},
+          {urls: 'stun:stun1.l.google.com:19302'},
+          {urls: 'stun:stun2.l.google.com:19302'}
+        ]
+      }
+    };
+    peer = forcedId ? new Peer(forcedId, opts) : new Peer(opts);
+    peer.on('open', id => { console.log('Peer ID:', id); resolve(id); });
+    peer.on('error', err => { console.error('Peer error:', err); reject(err); });
+    peer.on('call', handleIncomingCall);
+    peer.on('connection', handleIncomingConn);
   });
 }
 
 // ─── GET MEDIA ───
+// FIX: Always stop existing localStream before requesting new one
 async function getMedia(){
+  if(localStream){
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
   try{
-    localStream = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720}},audio:true});
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: {width:{ideal:1280}, height:{ideal:720}, facingMode:'user'},
+      audio: true
+    });
     return true;
   }catch(e){
     try{
-      localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+      localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
       return true;
     }catch(e2){
       try{
-        localStream = await navigator.mediaDevices.getUserMedia({audio:true});
-        toast('Camera not available — audio only call','');
+        localStream = await navigator.mediaDevices.getUserMedia({audio: true});
+        toast('Camera not available — audio only call');
         return true;
       }catch(e3){
-        toast('Camera & mic access denied. Please allow in browser settings.','error');
+        toast('Camera & mic access denied. Please allow in browser settings.', 'error');
         return false;
       }
     }
@@ -681,58 +728,53 @@ async function getMedia(){
 
 // ─── CREATE ROOM (HOST) ───
 async function createRoom(){
-  const name = document.getElementById('yourName').value.trim()||'You';
+  const name = document.getElementById('yourName').value.trim() || 'You';
   myName = name;
   isHost = true;
+  inActiveCall = true;
 
   showScreen('callscreen');
-  document.getElementById('connectingOverlay').style.display='flex';
-  document.getElementById('connectingText').textContent='Setting up your room...';
-  document.getElementById('connectingSub').textContent='Getting camera & microphone access';
+  document.getElementById('connectingOverlay').style.display = 'flex';
+  document.getElementById('connectingText').textContent = 'Setting up your room...';
+  document.getElementById('connectingSub').textContent = 'Getting camera & microphone access';
 
   const gotMedia = await getMedia();
-  if(!gotMedia){ showScreen('landing'); return; }
+  if(!gotMedia){ cleanupAndGoLanding(); return; }
 
   attachLocalStream();
 
-  document.getElementById('connectingSub').textContent='Creating secure room...';
+  document.getElementById('connectingSub').textContent = 'Creating secure room...';
 
   try{
     const roomId = await initPeer();
     myRoomId = roomId;
-    document.getElementById('roomIdDisplay').textContent = 'Room: '+roomId.substring(0,12)+'...';
-    document.getElementById('connectingOverlay').style.display='none';
-    document.getElementById('inviteOverlay').style.display='flex';
+    document.getElementById('roomIdDisplay').textContent = 'Room: ' + roomId.substring(0,12) + '...';
+    document.getElementById('connectingOverlay').style.display = 'none';
+    document.getElementById('inviteOverlay').style.display = 'flex';
 
     const shareUrl = window.location.origin + window.location.pathname + '?room=' + roomId;
     document.getElementById('inviteLinkDisplay').textContent = shareUrl;
     document.getElementById('waShareBtn').href =
-      'https://wa.me/?text='+encodeURIComponent('Join my HelloCall video call! Click: '+shareUrl+'\n\nRoom ID: '+roomId);
+      'https://wa.me/?text=' + encodeURIComponent('Join my HelloCall video call! Click: ' + shareUrl + '\n\nRoom ID: ' + roomId);
 
     startTimer();
     setStatus('🟢 Room ready — waiting for someone to join');
-    toast('Room created! Share the link to invite someone','success');
+    toast('Room created! Share the link to invite someone', 'success');
 
-    // URL update for sharing
-    window.history.pushState({room:roomId},'',window.location.pathname+'?room='+roomId);
-
-    // Also listen for join requests via data connection
-    peer.on('connection', conn => {
-      currentConn = conn;
-      setupConnListeners(conn);
-    });
+    // FIX: Use replaceState so refreshing re-triggers the join flow, not popstate back
+    window.history.replaceState({page:'room', room:roomId}, '', window.location.pathname + '?room=' + roomId);
 
   }catch(e){
     console.error(e);
-    toast('Could not create room. Check internet connection.','error');
-    showScreen('landing');
+    toast('Could not create room. Check internet connection.', 'error');
+    cleanupAndGoLanding();
   }
 }
 
 // ─── JOIN ROOM (GUEST) ───
 function joinRoom(){
   const rid = document.getElementById('joinRoomId').value.trim();
-  if(!rid){ toast('Enter a Room ID first','error'); return; }
+  if(!rid){ toast('Enter a Room ID first', 'error'); return; }
   openJoiningScreen(rid);
 }
 
@@ -740,94 +782,115 @@ function openJoiningScreen(roomId){
   pendingRoomId = roomId;
   showScreen('joiningscreen');
   document.getElementById('joiningMsg').textContent =
-    'Room ID: '+roomId.substring(0,20)+'... — Enter your name and allow camera to join.';
+    'Room ID: ' + roomId.substring(0,20) + '... — Enter your name and allow camera to join.';
+  document.getElementById('joinBtn').disabled = false;
+  document.getElementById('joinBtn').textContent = '✅ Join Now';
   startPreviewCamera();
 }
 
 async function startPreviewCamera(){
+  // FIX: stop any existing preview stream first
+  const pv = document.getElementById('previewVideo');
+  if(pv.srcObject){
+    pv.srcObject.getTracks().forEach(t => t.stop());
+    pv.srcObject = null;
+  }
+  document.getElementById('noCamMsg').style.display = 'none';
   try{
-    const stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-    const pv = document.getElementById('previewVideo');
-    pv.srcObject = stream;
-    localStream = stream;
+    // Use a SEPARATE stream just for preview — don't set localStream here
+    const previewStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+    pv.srcObject = previewStream;
+    // Store it in localStream so enterRoom() can use it directly
+    localStream = previewStream;
   }catch(e){
-    document.getElementById('noCamMsg').style.display='flex';
+    document.getElementById('noCamMsg').style.display = 'flex';
+    localStream = null;
   }
 }
 
 async function enterRoom(){
-  const name = document.getElementById('joinerName').value.trim()||'Guest';
+  const name = document.getElementById('joinerName').value.trim() || 'Guest';
   myName = name;
   isHost = false;
+  inActiveCall = true;
   const rid = pendingRoomId;
 
   if(!localStream){
     const ok = await getMedia();
-    if(!ok){ toast('Need camera/mic to join','error'); return; }
+    if(!ok){ toast('Need camera/mic to join', 'error'); return; }
   }
 
-  document.getElementById('joinBtn').disabled=true;
-  document.getElementById('joinBtn').textContent='Connecting...';
+  document.getElementById('joinBtn').disabled = true;
+  document.getElementById('joinBtn').textContent = 'Connecting...';
   showScreen('callscreen');
 
-  document.getElementById('connectingOverlay').style.display='flex';
-  document.getElementById('connectingText').textContent='Connecting to room...';
-  document.getElementById('connectingSub').textContent='Establishing peer connection';
+  document.getElementById('connectingOverlay').style.display = 'flex';
+  document.getElementById('connectingText').textContent = 'Connecting to room...';
+  document.getElementById('connectingSub').textContent = 'Establishing peer connection';
+
+  // FIX: Stop preview video element (stream is reused as localStream)
+  const pv = document.getElementById('previewVideo');
+  pv.srcObject = null;
 
   attachLocalStream();
 
   try{
-    const myId = await initPeer();
+    await initPeer();
     myRoomId = rid;
-    document.getElementById('roomIdDisplay').textContent = 'Room: '+rid.substring(0,12)+'...';
+    document.getElementById('roomIdDisplay').textContent = 'Room: ' + rid.substring(0,12) + '...';
 
     // Data connection for signaling/chat
     const conn = peer.connect(rid, {metadata:{name:myName}});
     currentConn = conn;
     setupConnListeners(conn);
 
-    conn.on('open',()=>{
-      conn.send({type:'hello',name:myName});
+    conn.on('open', () => {
+      conn.send({type:'hello', name:myName});
     });
 
-    // Make call
-    setTimeout(()=>{
+    // FIX: Make call immediately after peer connects (no arbitrary delay needed)
+    // Use a small delay only to let data connection stabilize
+    setTimeout(() => {
+      if(!localStream){ toast('Lost media stream', 'error'); return; }
       const call = peer.call(rid, localStream, {metadata:{name:myName}});
       currentCall = call;
       call.on('stream', remoteStream => {
-        document.getElementById('connectingOverlay').style.display='none';
-        document.getElementById('inviteOverlay').style.display='none';
-        showRemoteStream(remoteStream, name);
+        document.getElementById('connectingOverlay').style.display = 'none';
+        document.getElementById('inviteOverlay').style.display = 'none';
+        showRemoteStream(remoteStream, myName);
       });
-      call.on('close',()=>{ toast('Call ended by remote',''); endCall(); });
-      call.on('error',e=>{ toast('Call error: '+e,'error'); });
-    }, 1200);
+      call.on('close', () => { toast('Call ended by remote'); endCall(); });
+      call.on('error', err => { toast('Call error: ' + err.message, 'error'); });
+    }, 800);
 
     startTimer();
     setStatus('🟡 Connecting to room...');
 
+    // FIX: replaceState so refresh triggers join screen again
+    window.history.replaceState({page:'joining', room:rid}, '', window.location.pathname + '?room=' + rid);
+
   }catch(e){
     console.error(e);
-    toast('Could not connect. Check the Room ID.','error');
-    showScreen('landing');
+    toast('Could not connect. Check the Room ID.', 'error');
+    cleanupAndGoLanding();
   }
 }
 
 // ─── HANDLE INCOMING ───
 function handleIncomingCall(call){
-  console.log('Incoming call from',call.peer);
+  console.log('Incoming call from', call.peer);
   remoteName = call.metadata?.name || 'Someone';
   currentCall = call;
   call.answer(localStream);
   call.on('stream', remoteStream => {
-    document.getElementById('connectingOverlay').style.display='none';
-    document.getElementById('inviteOverlay').style.display='none';
+    document.getElementById('connectingOverlay').style.display = 'none';
+    document.getElementById('inviteOverlay').style.display = 'none';
     showRemoteStream(remoteStream, remoteName);
-    setStatus('🟢 Connected with '+remoteName);
-    toast(remoteName+' joined the call! 🎉','success');
-    addSysMsg(remoteName+' joined the room');
+    setStatus('🟢 Connected with ' + remoteName);
+    toast(remoteName + ' joined the call! 🎉', 'success');
+    addSysMsg(remoteName + ' joined the room');
   });
-  call.on('close',()=>{ toast('Call ended',''); endCall(); });
+  call.on('close', () => { toast('Call ended'); endCall(); });
 }
 
 function handleIncomingConn(conn){
@@ -837,66 +900,70 @@ function handleIncomingConn(conn){
 }
 
 function setupConnListeners(conn){
-  conn.on('open',()=>{ console.log('Data connection open'); });
+  conn.on('open', () => { console.log('Data connection open'); });
   conn.on('data', data => {
-    if(data.type==='hello'){
-      remoteName = data.name||'Friend';
+    if(data.type === 'hello'){
+      remoteName = data.name || 'Friend';
       updateRemoteName(remoteName);
-      addSysMsg(remoteName+' is connected');
-      setStatus('🟢 Connected with '+remoteName);
-    } else if(data.type==='chat'){
+      addSysMsg(remoteName + ' is connected');
+      setStatus('🟢 Connected with ' + remoteName);
+    } else if(data.type === 'chat'){
       receiveChatMsg(data.name, data.msg);
-    } else if(data.type==='camOff'){
-      showRemotePlaceholder(true, data.name||remoteName);
-    } else if(data.type==='camOn'){
-      showRemotePlaceholder(false, data.name||remoteName);
-    } else if(data.type==='bye'){
-      toast(remoteName+' left the call','');
-      addSysMsg(remoteName+' left the call');
+    } else if(data.type === 'camOff'){
+      showRemotePlaceholder(true, data.name || remoteName);
+    } else if(data.type === 'camOn'){
+      showRemotePlaceholder(false, data.name || remoteName);
+    } else if(data.type === 'bye'){
+      toast(remoteName + ' left the call');
+      addSysMsg(remoteName + ' left the call');
       hangupRemote();
     }
   });
-  conn.on('close',()=>{ addSysMsg('Peer disconnected'); });
+  conn.on('close', () => { addSysMsg('Peer disconnected'); });
 }
 
 // ─── STREAM MANAGEMENT ───
 function attachLocalStream(){
   const lv = document.getElementById('localVideo');
+  const lp = document.getElementById('localPlaceholder');
   if(localStream){
     lv.srcObject = localStream;
-    const vt = localStream.getVideoTracks();
-    if(!vt.length || !vt[0].enabled){
-      document.getElementById('localPlaceholder').style.display='flex';
-      lv.style.display='none';
-    }
+    // FIX: Check if there are actual video tracks with real content
+    const vTracks = localStream.getVideoTracks();
+    const hasVideo = vTracks.length > 0;
+    lv.style.display = hasVideo ? 'block' : 'none';
+    lp.style.display = hasVideo ? 'none' : 'flex';
+  } else {
+    lv.style.display = 'none';
+    lp.style.display = 'flex';
   }
-  const init = myName.charAt(0).toUpperCase();
-  document.getElementById('myInitial').textContent = init;
+  document.getElementById('myInitial').textContent = myName.charAt(0).toUpperCase();
 }
 
 function showRemoteStream(stream, name){
   const rv = document.getElementById('remoteVideo');
   rv.srcObject = stream;
-  rv.style.display='block';
-  document.getElementById('remotePlaceholder').style.display='none';
+  rv.style.display = 'block';
+  document.getElementById('remotePlaceholder').style.display = 'none';
   updateRemoteName(name);
-  setStatus('🟢 Connected with '+name);
+  setStatus('🟢 Connected with ' + (name || remoteName));
 }
 
 function showRemotePlaceholder(show, name){
   const rv = document.getElementById('remoteVideo');
   const rp = document.getElementById('remotePlaceholder');
   if(show){
-    rv.style.display='none'; rp.style.display='flex';
-    document.getElementById('remoteAvatar').textContent = (name||remoteName).charAt(0).toUpperCase();
-    document.getElementById('remoteNameDisplay').textContent = (name||remoteName)+' (camera off)';
+    rv.style.display = 'none';
+    rp.style.display = 'flex';
+    document.getElementById('remoteAvatar').textContent = (name || remoteName).charAt(0).toUpperCase();
+    document.getElementById('remoteNameDisplay').textContent = (name || remoteName) + ' (camera off)';
   } else {
-    if(rv.srcObject){ rv.style.display='block'; rp.style.display='none'; }
+    if(rv.srcObject){ rv.style.display = 'block'; rp.style.display = 'none'; }
   }
 }
 
 function updateRemoteName(name){
-  remoteName = name||'Friend';
+  remoteName = name || 'Friend';
   document.getElementById('remoteAvatar').textContent = remoteName.charAt(0).toUpperCase();
   document.getElementById('remoteNameDisplay').textContent = remoteName;
   document.getElementById('remoteStatus').textContent = 'On call';
@@ -906,19 +973,19 @@ function updateRemoteName(name){
 function toggleMic(){
   if(!localStream) return;
   const at = localStream.getAudioTracks();
-  if(!at.length){ toast('No microphone found','error'); return; }
+  if(!at.length){ toast('No microphone found', 'error'); return; }
   micOn = !micOn;
   at.forEach(t => t.enabled = micOn);
   const btn = document.getElementById('micBtn');
   btn.textContent = micOn ? '🎙️' : '🔇';
-  btn.className = 'cc-btn cc-mic' + (micOn?'':' off');
+  btn.className = 'cc-btn cc-mic' + (micOn ? '' : ' off');
   toast(micOn ? 'Microphone ON' : 'Microphone OFF');
 }
 
 function toggleCam(){
   if(!localStream) return;
   const vt = localStream.getVideoTracks();
-  if(!vt.length){ toast('No camera found','error'); return; }
+  if(!vt.length){ toast('No camera found', 'error'); return; }
   camOn = !camOn;
   vt.forEach(t => t.enabled = camOn);
   const lv = document.getElementById('localVideo');
@@ -927,54 +994,89 @@ function toggleCam(){
   lp.style.display = camOn ? 'none' : 'flex';
   const btn = document.getElementById('camBtn');
   btn.textContent = camOn ? '📷' : '🚫';
-  btn.className = 'cc-btn cc-cam'+(camOn?'':' off');
-  // Notify peer
+  btn.className = 'cc-btn cc-cam' + (camOn ? '' : ' off');
   if(currentConn && currentConn.open)
     currentConn.send({type: camOn ? 'camOn' : 'camOff', name: myName});
   toast(camOn ? 'Camera ON' : 'Camera OFF');
 }
 
+// FIX: Completely rewritten screen share with proper sender replacement
 async function toggleScreen(){
   if(screenSharing){
     // Stop screen share, restore camera
-    if(screenStream){ screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
     screenSharing = false;
-    document.getElementById('screenBtn').className='cc-btn cc-screen';
+    document.getElementById('screenBtn').className = 'cc-btn cc-screen';
     document.getElementById('screenIndicator').classList.remove('show');
-    // Restore camera video track
-    const gotMedia = await getMedia();
-    if(gotMedia && currentCall){
-      const sender = currentCall.peerConnection?.getSenders?.()?.find(s=>s.track?.kind==='video');
-      if(sender){
-        const vt = localStream.getVideoTracks()[0];
-        if(vt) sender.replaceTrack(vt);
-      }
+
+    if(screenStream){
+      screenStream.getTracks().forEach(t => t.stop());
+      screenStream = null;
     }
-    attachLocalStream();
-    toast('Screen sharing stopped');
-  } else {
-    try{
-      screenStream = await navigator.mediaDevices.getDisplayMedia({video:{cursor:'always'},audio:true});
-      screenSharing = true;
-      // Replace video track in call
-      if(currentCall){
-        const sender = currentCall.peerConnection?.getSenders?.()?.find(s=>s.track?.kind==='video');
-        if(sender){
-          const vt = screenStream.getVideoTracks()[0];
-          if(vt) sender.replaceTrack(vt);
+
+    // Get fresh camera stream
+    const gotMedia = await getMedia();
+    if(gotMedia){
+      // Replace video track in the active call
+      if(currentCall && currentCall.peerConnection){
+        const pc = currentCall.peerConnection;
+        const senders = pc.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        const newVideoTrack = localStream.getVideoTracks()[0];
+        if(videoSender && newVideoTrack){
+          try{ await videoSender.replaceTrack(newVideoTrack); }catch(e){ console.warn('replaceTrack cam:', e); }
+        }
+        // Also replace audio if needed
+        const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
+        const newAudioTrack = localStream.getAudioTracks()[0];
+        if(audioSender && newAudioTrack){
+          try{ await audioSender.replaceTrack(newAudioTrack); }catch(e){ console.warn('replaceTrack audio:', e); }
         }
       }
-      // Show screen in local pip
+      attachLocalStream();
+      toast('Screen sharing stopped');
+    }
+
+  } else {
+    // Start screen share
+    try{
+      screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {cursor: 'always', displaySurface: 'monitor'},
+        audio: false
+      });
+      screenSharing = true;
+
+      const screenVideoTrack = screenStream.getVideoTracks()[0];
+
+      // FIX: Replace video track in the peer connection directly
+      if(currentCall && currentCall.peerConnection){
+        const pc = currentCall.peerConnection;
+        const senders = pc.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        if(videoSender && screenVideoTrack){
+          try{ await videoSender.replaceTrack(screenVideoTrack); }catch(e){ console.warn('replaceTrack screen:', e); }
+        }
+      }
+
+      // Show screen stream in local PIP
       const lv = document.getElementById('localVideo');
       lv.srcObject = screenStream;
-      lv.style.display='block';
-      document.getElementById('localPlaceholder').style.display='none';
-      document.getElementById('screenBtn').className='cc-btn cc-screen off';
+      lv.style.display = 'block';
+      document.getElementById('localPlaceholder').style.display = 'none';
+
+      document.getElementById('screenBtn').className = 'cc-btn cc-screen off';
       document.getElementById('screenIndicator').classList.add('show');
-      screenStream.getVideoTracks()[0].onended = ()=>{ if(screenSharing) toggleScreen(); };
-      toast('Screen sharing started','success');
+
+      // Auto-stop when user clicks "Stop Sharing" in browser UI
+      screenVideoTrack.onended = () => {
+        if(screenSharing) toggleScreen();
+      };
+
+      toast('Screen sharing started', 'success');
+
     }catch(e){
-      if(e.name!=='NotAllowedError') toast('Screen share error: '+e.message,'error');
+      screenSharing = false;
+      if(e.name !== 'NotAllowedError')
+        toast('Screen share error: ' + e.message, 'error');
     }
   }
 }
@@ -982,46 +1084,59 @@ async function toggleScreen(){
 function toggleChat(){
   chatOpen = !chatOpen;
   const panel = document.getElementById('chatPanel');
-  const btn = document.getElementById('chatBtn');
   panel.classList.toggle('open', chatOpen);
-  btn.className = 'cc-btn cc-chat' + (chatOpen?' ':' ');
   if(chatOpen){
     unreadMsgs = 0;
-    document.getElementById('chatBadge').style.display='none';
+    document.getElementById('chatBadge').style.display = 'none';
     document.getElementById('chatInput').focus();
   }
 }
 
 function endCall(){
-  if(currentConn && currentConn.open) currentConn.send({type:'bye',name:myName});
-  hangupRemote();
-  if(peer && !peer.destroyed){ peer.destroy(); peer=null; }
-  if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
-  if(screenStream){ screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
+  if(currentConn && currentConn.open) currentConn.send({type:'bye', name:myName});
+  inActiveCall = false;
+  stopAllMedia();
+  if(peer && !peer.destroyed){ peer.destroy(); peer = null; }
   clearInterval(callTimerInterval);
+  resetCallUI();
   showScreen('landing');
-  // reset
-  document.getElementById('remoteVideo').srcObject=null;
-  document.getElementById('remoteVideo').style.display='none';
-  document.getElementById('remotePlaceholder').style.display='flex';
-  document.getElementById('chatMsgs').innerHTML='';
-  document.getElementById('connectingOverlay').style.display='flex';
-  document.getElementById('inviteOverlay').style.display='none';
-  chatOpen=false; document.getElementById('chatPanel').classList.remove('open');
-  callSeconds=0; micOn=true; camOn=true; screenSharing=false;
-  document.getElementById('micBtn').textContent='🎙️';
-  document.getElementById('micBtn').className='cc-btn cc-mic';
-  document.getElementById('camBtn').textContent='📷';
-  document.getElementById('camBtn').className='cc-btn cc-cam';
-  document.getElementById('screenBtn').className='cc-btn cc-screen';
-  document.getElementById('screenIndicator').classList.remove('show');
-  document.getElementById('chatBadge').style.display='none';
-  unreadMsgs=0;
+  window.history.replaceState({page:'landing'}, document.title, window.location.pathname);
 }
 
 function hangupRemote(){
-  if(currentCall){ currentCall.close(); currentCall=null; }
-  if(currentConn){ currentConn.close(); currentConn=null; }
+  if(currentCall){ currentCall.close(); currentCall = null; }
+  if(currentConn){ currentConn.close(); currentConn = null; }
+}
+
+function resetCallUI(){
+  const rv = document.getElementById('remoteVideo');
+  rv.srcObject = null;
+  rv.style.display = 'none';
+  document.getElementById('remotePlaceholder').style.display = 'flex';
+  document.getElementById('remoteNameDisplay').textContent = 'Waiting for someone...';
+  document.getElementById('remoteStatus').textContent = 'Share the room link to invite';
+  document.getElementById('remoteAvatar').textContent = '?';
+  document.getElementById('chatMsgs').innerHTML = '';
+  document.getElementById('connectingOverlay').style.display = 'flex';
+  document.getElementById('connectingText').textContent = 'Setting up your room...';
+  document.getElementById('connectingSub').textContent = 'Getting camera & microphone access';
+  document.getElementById('inviteOverlay').style.display = 'none';
+  chatOpen = false;
+  document.getElementById('chatPanel').classList.remove('open');
+  callSeconds = 0;
+  document.getElementById('callTimer').textContent = '00:00';
+  micOn = true; camOn = true; screenSharing = false;
+  document.getElementById('micBtn').textContent = '🎙️';
+  document.getElementById('micBtn').className = 'cc-btn cc-mic';
+  document.getElementById('camBtn').textContent = '📷';
+  document.getElementById('camBtn').className = 'cc-btn cc-cam';
+  document.getElementById('screenBtn').className = 'cc-btn cc-screen';
+  document.getElementById('screenIndicator').classList.remove('show');
+  document.getElementById('chatBadge').style.display = 'none';
+  unreadMsgs = 0;
+  const lv = document.getElementById('localVideo');
+  lv.srcObject = null;
+  document.getElementById('localPlaceholder').style.display = 'flex';
 }
 
 // ─── CHAT ───
@@ -1031,8 +1146,10 @@ function sendChatMsg(){
   if(!msg) return;
   inp.value = '';
   addChatMsg(myName, msg, true);
-  if(currentConn && currentConn.open) currentConn.send({type:'chat',name:myName,msg});
-  else toast('Not connected yet — message not sent','error');
+  if(currentConn && currentConn.open)
+    currentConn.send({type:'chat', name:myName, msg});
+  else
+    toast('Not connected yet — message not sent', 'error');
 }
 
 function receiveChatMsg(name, msg){
@@ -1041,19 +1158,19 @@ function receiveChatMsg(name, msg){
     unreadMsgs++;
     const badge = document.getElementById('chatBadge');
     badge.textContent = unreadMsgs > 9 ? '9+' : unreadMsgs;
-    badge.style.display='flex';
+    badge.style.display = 'flex';
   }
 }
 
 function addChatMsg(name, msg, isMe){
   const msgs = document.getElementById('chatMsgs');
   const d = document.createElement('div');
-  d.className = 'cmsg ' + (isMe?'me':'them');
+  d.className = 'cmsg ' + (isMe ? 'me' : 'them');
   const now = new Date();
-  const timeStr = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
-  d.innerHTML = (isMe?'':('<div class="cmsg-name">'+escHtml(name)+'</div>'))
+  const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  d.innerHTML = (isMe ? '' : ('<div class="cmsg-name">' + escHtml(name) + '</div>'))
     + escHtml(msg)
-    + '<div class="cmsg-time">'+timeStr+'</div>';
+    + '<div class="cmsg-time">' + timeStr + '</div>';
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
@@ -1061,66 +1178,105 @@ function addChatMsg(name, msg, isMe){
 function addSysMsg(text){
   const msgs = document.getElementById('chatMsgs');
   const d = document.createElement('div');
-  d.className = 'chat-sys'; d.textContent = text;
+  d.className = 'chat-sys';
+  d.textContent = text;
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function escHtml(str){ const d=document.createElement('div');d.textContent=str;return d.innerHTML; }
+function escHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
 
 // ─── TIMER ───
 function startTimer(){
-  callTimerInterval = setInterval(()=>{
+  clearInterval(callTimerInterval);
+  callSeconds = 0;
+  callTimerInterval = setInterval(() => {
     callSeconds++;
-    const m=Math.floor(callSeconds/60), s=callSeconds%60;
+    const m = Math.floor(callSeconds / 60), s = callSeconds % 60;
     document.getElementById('callTimer').textContent =
-      String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  },1000);
+      String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }, 1000);
 }
 
 // ─── STATUS ───
 function setStatus(txt){
-  document.getElementById('connStatus').textContent=txt;
+  document.getElementById('connStatus').textContent = txt;
   const sb = document.getElementById('statusBar');
-  document.getElementById('statusText').textContent=txt;
+  document.getElementById('statusText').textContent = txt;
   sb.classList.add('show');
-  setTimeout(()=>sb.classList.remove('show'),4000);
+  setTimeout(() => sb.classList.remove('show'), 4000);
 }
 
 // ─── COPY ROOM ID ───
 function copyRoomId(){
   const url = window.location.origin + window.location.pathname + '?room=' + myRoomId;
-  navigator.clipboard.writeText(url).then(()=>{
+  navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('copyBtn');
-    btn.textContent='✅ Copied!'; btn.className='btn-copy copied';
-    setTimeout(()=>{ btn.textContent='📋 Copy Room Link'; btn.className='btn-copy'; },2500);
-    toast('Room link copied! Share it with your friend 🎉','success');
-  }).catch(()=>{
-    // Fallback
-    const ta=document.createElement('textarea');
-    ta.value=url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    toast('Copied!','success');
+    btn.textContent = '✅ Copied!';
+    btn.className = 'btn-copy copied';
+    setTimeout(() => { btn.textContent = '📋 Copy Room Link'; btn.className = 'btn-copy'; }, 2500);
+    toast('Room link copied! Share it with your friend 🎉', 'success');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('Copied!', 'success');
   });
 }
 
 // ─── CHECK URL PARAMS ───
+// FIX: On page load/refresh, if ?room= is in URL → show joining screen (don't try to resume a dead call)
 function checkUrlParams(){
   const params = new URLSearchParams(window.location.search);
   const roomId = params.get('room');
-  if(roomId){ openJoiningScreen(roomId); }
+  if(roomId){
+    // Could be a host refreshing or a guest clicking an invite link
+    // In both cases we show the joining screen so they can re-enter
+    openJoiningScreen(roomId);
+  }
 }
 
 // ─── INIT ───
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded', () => {
+  // FIX: Set initial history state so we can distinguish navigation
+  if(!window.location.search.includes('room=')){
+    window.history.replaceState({page:'landing'}, document.title, window.location.pathname);
+  }
+
   checkUrlParams();
 
   // Enter key on landing inputs
-  document.getElementById('yourName')?.addEventListener('keydown',e=>{ if(e.key==='Enter') createRoom(); });
-  document.getElementById('joinRoomId')?.addEventListener('keydown',e=>{ if(e.key==='Enter') joinRoom(); });
-  document.getElementById('joinerName')?.addEventListener('keydown',e=>{ if(e.key==='Enter') enterRoom(); });
+  document.getElementById('yourName')?.addEventListener('keydown', e => { if(e.key === 'Enter') createRoom(); });
+  document.getElementById('joinRoomId')?.addEventListener('keydown', e => { if(e.key === 'Enter') joinRoom(); });
+  document.getElementById('joinerName')?.addEventListener('keydown', e => { if(e.key === 'Enter') enterRoom(); });
 
-  // Handle browser back
-  window.addEventListener('popstate',()=>{ showLanding(); });
+  // FIX: Handle browser back button — only go to landing if we are in a call/joining screen
+  // Do NOT use popstate for call screen management since replaceState doesn't trigger popstate
+  window.addEventListener('popstate', (e) => {
+    const state = e.state;
+    // If navigating back to landing state, clean up
+    if(!state || state.page === 'landing'){
+      if(inActiveCall){
+        endCall();
+      } else {
+        stopAllMedia();
+        showScreen('landing');
+      }
+    }
+  });
+
+  // FIX: Clean up media on page unload/refresh
+  window.addEventListener('beforeunload', () => {
+    stopAllMedia();
+    if(peer && !peer.destroyed) peer.destroy();
+  });
 });
 </script>
 </body>
