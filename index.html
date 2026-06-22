@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>HelloCall – Real Video Calls & Live Chat</title>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,373 +12,552 @@
   --g:#00f5a0;--p:#ff4d9e;--s:#00c8ff;
   --w:#ffffff;--ow:#f8f8ff;--sw:#f0f2ff;
   --d:#0d0d1a;--gr:#6b7280;--lg:#e5e7f0;
-  --r:#ff4444;
+  --r:#ff4444;--gold:#f59e0b;
+  --radius:16px;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--w);color:var(--d);overflow-x:hidden}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;height:100%}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--w);color:var(--d);overflow-x:hidden;height:100%}
 
 /* ── SCREENS ── */
 .screen{display:none;min-height:100vh;width:100%}
 .screen.active{display:flex}
+#callscreen.active{display:flex;height:100dvh;min-height:unset}
 
-/* ── LANDING ── */
+/* ════════════════════════════════
+   LANDING
+════════════════════════════════ */
 #landing{flex-direction:column;background:var(--w);overflow-y:auto}
 
-nav{position:sticky;top:0;z-index:100;padding:1rem 5%;
+/* NAV */
+nav{position:sticky;top:0;z-index:100;padding:.85rem 5%;
   display:flex;align-items:center;justify-content:space-between;
-  background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);
+  background:rgba(255,255,255,0.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border-bottom:1px solid rgba(91,94,244,0.1)}
-.logo{font-family:'Clash Display',sans-serif;font-size:1.6rem;font-weight:700;
-  color:var(--e);display:flex;align-items:center;gap:8px;text-decoration:none}
-.logo-dot{width:10px;height:10px;background:var(--g);border-radius:50%;animation:pd 1.5s infinite}
-@keyframes pd{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
-.nav-cta{background:var(--e);color:#fff;padding:.6rem 1.4rem;border-radius:50px;
-  font-weight:600;font-size:.9rem;border:none;cursor:pointer;transition:all .2s;
-  box-shadow:0 4px 18px rgba(91,94,244,.35)}
-.nav-cta:hover{background:var(--ed);transform:translateY(-2px)}
+.logo{font-family:'Clash Display',sans-serif;font-size:1.5rem;font-weight:700;
+  color:var(--e);display:flex;align-items:center;gap:8px;text-decoration:none;cursor:pointer}
+.logo-dot{width:10px;height:10px;background:var(--g);border-radius:50%;animation:pd 1.5s infinite;flex-shrink:0}
+@keyframes pd{0%,100%{transform:scale(1)}50%{transform:scale(1.6)}}
+.nav-right{display:flex;align-items:center;gap:.6rem}
+.nav-link{color:var(--gr);font-size:.85rem;font-weight:500;border:none;background:none;cursor:pointer;padding:.4rem .6rem;border-radius:8px;transition:color .2s}
+.nav-link:hover{color:var(--e)}
+.nav-cta{background:var(--e);color:#fff;padding:.55rem 1.2rem;border-radius:50px;
+  font-weight:600;font-size:.85rem;border:none;cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 18px rgba(91,94,244,.3);white-space:nowrap}
+.nav-cta:hover{background:var(--ed);transform:translateY(-1px)}
 
 /* HERO */
-.hero{padding:5rem 5% 4rem;text-align:center;position:relative;overflow:hidden}
+.hero{padding:4rem 5% 3rem;text-align:center;position:relative;overflow:hidden}
 .hero-bg{position:absolute;inset:0;z-index:0}
-.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.15;animation:fo 8s ease-in-out infinite}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.12;animation:fo 8s ease-in-out infinite;pointer-events:none}
 .o1{width:500px;height:500px;background:var(--e);top:-200px;right:-100px}
 .o2{width:350px;height:350px;background:var(--p);bottom:-100px;left:-100px;animation-delay:-3s}
 .o3{width:250px;height:250px;background:var(--s);top:40%;left:30%;animation-delay:-5s}
 @keyframes fo{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-25px)}}
 .grid-bg{position:absolute;inset:0;
   background-image:linear-gradient(rgba(91,94,244,.05)1px,transparent 1px),linear-gradient(90deg,rgba(91,94,244,.05)1px,transparent 1px);
-  background-size:55px 55px;
-  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%)}
-.hero-inner{position:relative;z-index:1;max-width:720px;margin:0 auto}
+  background-size:50px 50px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%)}
+.hero-inner{position:relative;z-index:1;max-width:700px;margin:0 auto}
 .badge{display:inline-flex;align-items:center;gap:7px;background:var(--sw);
-  border:1px solid rgba(91,94,244,.2);color:var(--e);padding:.4rem .9rem;
-  border-radius:50px;font-size:.8rem;font-weight:600;margin-bottom:1.5rem}
-.bdot{width:7px;height:7px;background:var(--g);border-radius:50%;animation:pd 1s infinite}
-h1{font-family:'Clash Display',sans-serif;font-size:clamp(2.8rem,6vw,4.5rem);
+  border:1px solid rgba(91,94,244,.2);color:var(--e);padding:.38rem .9rem;
+  border-radius:50px;font-size:.78rem;font-weight:600;margin-bottom:1.4rem}
+.bdot{width:6px;height:6px;background:var(--g);border-radius:50%;animation:pd 1s infinite}
+h1{font-family:'Clash Display',sans-serif;font-size:clamp(2.4rem,5.5vw,4.2rem);
   font-weight:700;line-height:1.1;margin-bottom:1rem}
 .grad{background:linear-gradient(135deg,#5b5ef4,#8b5cf6,#c084fc);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero p{font-size:1.1rem;color:#555;line-height:1.7;max-width:560px;margin:0 auto 2.5rem}
-.hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:3rem}
-.btn-p{background:var(--e);color:#fff;padding:.9rem 2rem;border-radius:50px;
-  font-size:1rem;font-weight:600;border:none;cursor:pointer;
-  box-shadow:0 8px 28px rgba(91,94,244,.4);transition:all .25s}
+.hero p{font-size:1rem;color:#555;line-height:1.75;max-width:520px;margin:0 auto 2.2rem}
+.hero-btns{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem}
+.btn-p{background:var(--e);color:#fff;padding:.85rem 1.8rem;border-radius:50px;
+  font-size:.95rem;font-weight:600;border:none;cursor:pointer;
+  box-shadow:0 8px 28px rgba(91,94,244,.35);transition:all .25s}
 .btn-p:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(91,94,244,.5)}
-.btn-s{background:transparent;color:var(--d);padding:.9rem 2rem;border-radius:50px;
-  font-size:1rem;font-weight:600;border:2px solid var(--lg);cursor:pointer;transition:all .25s}
+.btn-s{background:transparent;color:var(--d);padding:.85rem 1.8rem;border-radius:50px;
+  font-size:.95rem;font-weight:600;border:2px solid var(--lg);cursor:pointer;transition:all .25s}
 .btn-s:hover{border-color:var(--e);color:var(--e);transform:translateY(-3px)}
+
+/* STATS BAR */
+.stats-bar{display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap;margin-bottom:3rem;padding:0 1rem}
+.stat{text-align:center}
+.stat-num{font-family:'Clash Display',sans-serif;font-size:1.5rem;font-weight:700;color:var(--e)}
+.stat-lbl{font-size:.72rem;color:#888;margin-top:1px}
 
 /* CALL PREVIEW CARD */
 .preview-card{background:#fff;border-radius:24px;padding:6px;
-  box-shadow:0 30px 80px rgba(91,94,244,.15),0 0 0 1px rgba(91,94,244,.08);
-  max-width:460px;margin:0 auto 4rem;animation:hf 6s ease-in-out infinite}
-@keyframes hf{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  box-shadow:0 30px 80px rgba(91,94,244,.12),0 0 0 1px rgba(91,94,244,.07);
+  max-width:440px;margin:0 auto 4rem;animation:hf 6s ease-in-out infinite}
+@keyframes hf{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 .vs{background:linear-gradient(135deg,#1a1a3e,#0d0d2b,#1a0d33);
-  border-radius:20px;padding:18px;height:250px;
+  border-radius:20px;padding:16px;height:240px;
   display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-.vstars{position:absolute;inset:0;
+.vstars{position:absolute;inset:0;opacity:.6;
   background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.15)1px,transparent 1px),
     radial-gradient(circle at 70% 60%,rgba(255,255,255,.1)1px,transparent 1px),
     radial-gradient(circle at 40% 80%,rgba(255,255,255,.12)1px,transparent 1px)}
-.vavatars{display:flex;justify-content:center;align-items:center;gap:16px;flex:1;position:relative;z-index:1}
-.vav{width:80px;height:80px;border-radius:18px;display:flex;align-items:center;justify-content:center;
-  font-size:1.8rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.vavatars{display:flex;justify-content:center;align-items:center;gap:14px;flex:1;position:relative;z-index:1}
+.vav{width:76px;height:76px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+  font-size:1.7rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .va1{background:linear-gradient(135deg,#5b5ef4,#8b5cf6);animation:vap 3s ease-in-out infinite}
 .va2{background:linear-gradient(135deg,#ff4d9e,#ff6b6b);animation:vap 3s 1s ease-in-out infinite}
 @keyframes vap{0%,100%{box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 0 0 rgba(91,94,244,.4)}50%{box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 0 8px rgba(91,94,244,.1)}}
-.vwave{display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;height:40px}
+.vwave{display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;height:36px}
 .wb{height:4px;background:var(--g);border-radius:2px;animation:wa .8s ease-in-out infinite}
-.wb:nth-child(1){width:20px;animation-delay:0s}
-.wb:nth-child(2){width:28px;animation-delay:.15s}
-.wb:nth-child(3){width:16px;animation-delay:.3s}
+.wb:nth-child(1){width:18px;animation-delay:0s}
+.wb:nth-child(2){width:26px;animation-delay:.15s}
+.wb:nth-child(3){width:14px;animation-delay:.3s}
 @keyframes wa{0%,100%{transform:scaleY(1);opacity:.6}50%{transform:scaleY(2.5);opacity:1}}
 .vbar{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
-.vstatus{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.7);font-size:.76rem}
+.vstatus{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.7);font-size:.72rem}
 .slive{width:7px;height:7px;background:var(--g);border-radius:50%;animation:pd 1s infinite}
-.vctrls{display:flex;gap:8px}
-.vcb{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);
-  display:flex;align-items:center;justify-content:center;font-size:.85rem;cursor:pointer;transition:transform .2s}
-.vcb:hover{transform:scale(1.15)}
+.vctrls{display:flex;gap:7px}
+.vcb{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;font-size:.8rem;cursor:pointer}
 
-/* ROOM SECTION */
+/* ── ROOM SECTION ── */
 .room-section{background:var(--sw);padding:3rem 5%;display:flex;flex-direction:column;align-items:center;gap:1.5rem}
-.room-box{background:#fff;border-radius:24px;padding:2rem;max-width:560px;width:100%;
-  box-shadow:0 8px 32px rgba(91,94,244,.1);border:1px solid rgba(91,94,244,.1)}
-.room-title{font-family:'Clash Display',sans-serif;font-size:1.5rem;font-weight:700;text-align:center;margin-bottom:.3rem}
-.room-sub{font-size:.88rem;color:#666;text-align:center;margin-bottom:1.5rem}
-.room-inp{width:100%;padding:.85rem 1.1rem;border:2px solid var(--lg);border-radius:14px;
-  font-size:.95rem;font-family:inherit;outline:none;transition:border .2s;margin-bottom:.8rem}
+.room-box{background:#fff;border-radius:24px;padding:2rem;max-width:520px;width:100%;
+  box-shadow:0 8px 32px rgba(91,94,244,.1);border:1px solid rgba(91,94,244,.08)}
+.room-title{font-family:'Clash Display',sans-serif;font-size:1.4rem;font-weight:700;text-align:center;margin-bottom:.3rem}
+.room-sub{font-size:.85rem;color:#666;text-align:center;margin-bottom:1.4rem}
+.room-inp{width:100%;padding:.82rem 1.1rem;border:2px solid var(--lg);border-radius:14px;
+  font-size:.93rem;font-family:inherit;outline:none;transition:border .2s;margin-bottom:.75rem;
+  background:#fff;color:var(--d)}
 .room-inp:focus{border-color:var(--e)}
-.room-inp::placeholder{color:#aaa}
-.btn-start{width:100%;padding:1rem;background:var(--e);color:#fff;border:none;border-radius:14px;
-  font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s;
-  box-shadow:0 6px 20px rgba(91,94,244,.35)}
+.room-inp::placeholder{color:#bbb}
+.btn-start{width:100%;padding:.95rem;background:var(--e);color:#fff;border:none;border-radius:14px;
+  font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s;
+  box-shadow:0 6px 20px rgba(91,94,244,.3)}
 .btn-start:hover{background:var(--ed);transform:translateY(-2px)}
-.divider{display:flex;align-items:center;gap:1rem;color:#aaa;font-size:.82rem;margin:.3rem 0}
+.divider{display:flex;align-items:center;gap:1rem;color:#bbb;font-size:.8rem;margin:.4rem 0}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--lg)}
-.btn-join{width:100%;padding:1rem;background:transparent;color:var(--e);border:2px solid var(--e);
-  border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s}
-.btn-join:hover{background:var(--sw);transform:translateY(-2px)}
+.btn-join-land{width:100%;padding:.95rem;background:transparent;color:var(--e);border:2px solid var(--e);
+  border-radius:14px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s}
+.btn-join-land:hover{background:var(--sw);transform:translateY(-2px)}
 
-/* FEATURES */
-.feat-section{padding:4rem 5%;background:#fff}
+/* ── FEATURES ── */
+.feat-section{padding:4rem 5%;background:#fff;text-align:center}
 .sec-tag{display:inline-block;background:linear-gradient(135deg,rgba(91,94,244,.1),rgba(139,92,246,.1));
-  color:var(--e);padding:.35rem 1rem;border-radius:50px;font-size:.8rem;font-weight:600;
-  margin-bottom:.8rem;border:1px solid rgba(91,94,244,.2)}
-.sec-t{font-family:'Clash Display',sans-serif;font-size:clamp(1.8rem,3.5vw,2.5rem);
+  color:var(--e);padding:.32rem .9rem;border-radius:50px;font-size:.78rem;font-weight:600;
+  margin-bottom:.8rem;border:1px solid rgba(91,94,244,.15)}
+.sec-t{font-family:'Clash Display',sans-serif;font-size:clamp(1.7rem,3.5vw,2.4rem);
   font-weight:700;margin-bottom:.8rem;line-height:1.2}
-.sec-s{font-size:1rem;color:#666;max-width:560px;margin:0 auto 2.5rem;line-height:1.7}
-.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;max-width:1000px;margin:0 auto}
-.fc{background:#fff;border-radius:20px;padding:1.8rem;border:1px solid var(--lg);transition:all .3s}
-.fc:hover{transform:translateY(-8px);box-shadow:0 20px 40px rgba(91,94,244,.1);border-color:rgba(91,94,244,.25)}
-.fi{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;
-  font-size:1.4rem;margin-bottom:1rem}
+.sec-s{font-size:.95rem;color:#666;max-width:520px;margin:0 auto 2.5rem;line-height:1.7}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.1rem;max-width:960px;margin:0 auto}
+.fc{background:#fff;border-radius:20px;padding:1.6rem;border:1.5px solid var(--lg);transition:all .3s;text-align:left}
+.fc:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(91,94,244,.08);border-color:rgba(91,94,244,.2)}
+.fi{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;margin-bottom:.9rem}
 .fi1{background:linear-gradient(135deg,rgba(91,94,244,.12),rgba(139,92,246,.12))}
 .fi2{background:linear-gradient(135deg,rgba(0,245,160,.12),rgba(0,200,255,.12))}
 .fi3{background:linear-gradient(135deg,rgba(255,77,158,.12),rgba(255,107,107,.12))}
 .fi4{background:linear-gradient(135deg,rgba(0,200,255,.12),rgba(91,94,244,.12))}
 .fi5{background:linear-gradient(135deg,rgba(255,170,0,.12),rgba(255,107,107,.12))}
 .fi6{background:linear-gradient(135deg,rgba(0,200,150,.12),rgba(0,200,255,.12))}
-.ft{font-family:'Clash Display',sans-serif;font-size:1.05rem;font-weight:600;margin-bottom:.4rem}
-.fd{font-size:.86rem;color:#666;line-height:1.6}
+.fi7{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(239,68,68,.12))}
+.fi8{background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(59,130,246,.12))}
+.ft{font-family:'Clash Display',sans-serif;font-size:1rem;font-weight:600;margin-bottom:.35rem}
+.fd{font-size:.83rem;color:#666;line-height:1.6}
+.feat-badge{display:inline-block;background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(239,68,68,.1));
+  color:var(--gold);font-size:.65rem;font-weight:700;padding:.15rem .5rem;border-radius:20px;
+  border:1px solid rgba(245,158,11,.3);margin-left:.4rem;vertical-align:middle}
 
-/* PREMIUM */
+/* ── HOW IT WORKS ── */
+.how-section{padding:4rem 5%;background:var(--sw);text-align:center}
+.steps{display:flex;gap:0;justify-content:center;flex-wrap:wrap;max-width:860px;margin:0 auto;position:relative}
+.steps::before{content:'';position:absolute;top:30px;left:15%;right:15%;height:2px;
+  background:linear-gradient(90deg,var(--e),var(--p));opacity:.2;z-index:0}
+.step{flex:1;min-width:160px;max-width:200px;padding:1.5rem 1rem;position:relative;z-index:1}
+.step-num{width:58px;height:58px;border-radius:50%;background:var(--e);color:#fff;
+  font-family:'Clash Display',sans-serif;font-size:1.3rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;
+  box-shadow:0 8px 24px rgba(91,94,244,.3)}
+.step h4{font-family:'Clash Display',sans-serif;font-size:.95rem;font-weight:600;margin-bottom:.4rem}
+.step p{font-size:.78rem;color:#666;line-height:1.5}
+
+/* ── PREMIUM ── */
 .prem-section{padding:4rem 5%;background:linear-gradient(135deg,#0d0d1a,#1a0d33);color:#fff;text-align:center;position:relative;overflow:hidden}
 .prem-section::before{content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at 30% 50%,rgba(91,94,244,.3),transparent 60%),
-    radial-gradient(circle at 70% 50%,rgba(255,77,158,.15),transparent 60%)}
+  background:radial-gradient(circle at 30% 50%,rgba(91,94,244,.25),transparent 60%),
+    radial-gradient(circle at 70% 50%,rgba(255,77,158,.12),transparent 60%)}
 .prem-inner{position:relative;z-index:1}
-.prem-t{font-family:'Clash Display',sans-serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;margin-bottom:1rem}
-.prem-s{color:rgba(255,255,255,.65);font-size:1rem;margin-bottom:2rem;line-height:1.7}
-.prem-cards{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem}
-.pc{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
-  border-radius:20px;padding:1.8rem;min-width:220px;max-width:240px;text-align:center;transition:all .3s}
+.prem-t{font-family:'Clash Display',sans-serif;font-size:clamp(1.7rem,4vw,2.6rem);font-weight:700;margin-bottom:1rem}
+.prem-s{color:rgba(255,255,255,.6);font-size:.95rem;margin-bottom:2rem;line-height:1.7;max-width:540px;margin-left:auto;margin-right:auto}
+.prem-cards{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem;align-items:stretch}
+.pc{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:22px;padding:2rem 1.5rem;min-width:210px;max-width:230px;text-align:center;
+  transition:all .3s;display:flex;flex-direction:column;gap:.4rem}
 .pc:hover{border-color:rgba(91,94,244,.5);background:rgba(91,94,244,.1);transform:translateY(-8px)}
-.pc.hot{border-color:var(--g);background:rgba(0,245,160,.07)}
-.pc-icon{font-size:2.2rem;margin-bottom:.8rem}
-.pc-name{font-family:'Clash Display',sans-serif;font-size:1.05rem;font-weight:600;margin-bottom:.3rem}
-.pc-price{font-size:1.6rem;font-weight:700;color:var(--g);margin-bottom:.3rem}
-.pc-sub{font-size:.78rem;color:rgba(255,255,255,.5)}
+.pc.hot{border-color:var(--g);background:rgba(0,245,160,.06);position:relative;overflow:hidden}
+.pc.hot::before{content:'POPULAR';position:absolute;top:14px;right:-22px;background:var(--g);
+  color:#000;font-size:.6rem;font-weight:800;padding:3px 28px;transform:rotate(45deg);letter-spacing:.05em}
+.pc-icon{font-size:2rem;margin-bottom:.4rem}
+.pc-name{font-family:'Clash Display',sans-serif;font-size:1rem;font-weight:700}
+.pc-price{font-size:1.8rem;font-weight:700;color:var(--g)}
+.pc-period{font-size:.72rem;color:rgba(255,255,255,.4);margin-top:-4px}
+.pc-feats{list-style:none;margin-top:.8rem;text-align:left;display:flex;flex-direction:column;gap:.4rem}
+.pc-feats li{font-size:.76rem;color:rgba(255,255,255,.65);display:flex;align-items:flex-start;gap:.4rem}
+.pc-feats li::before{content:'✓';color:var(--g);font-weight:700;flex-shrink:0;margin-top:1px}
 .btn-wa{display:inline-flex;align-items:center;gap:10px;
-  background:#25D366;color:#fff;padding:1rem 2.5rem;border-radius:50px;
-  font-size:1.05rem;font-weight:700;border:none;cursor:pointer;transition:all .25s;
-  box-shadow:0 8px 28px rgba(37,211,102,.4);text-decoration:none}
+  background:#25D366;color:#fff;padding:.95rem 2.2rem;border-radius:50px;
+  font-size:1rem;font-weight:700;border:none;cursor:pointer;transition:all .25s;
+  box-shadow:0 8px 28px rgba(37,211,102,.35);text-decoration:none}
 .btn-wa:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(37,211,102,.5);background:#1ebe5a}
-.wa-note{margin-top:1rem;font-size:.82rem;color:rgba(255,255,255,.45)}
+.wa-note{margin-top:.8rem;font-size:.78rem;color:rgba(255,255,255,.4)}
 
-/* FOOTER */
-footer{background:#0d0d1a;color:rgba(255,255,255,.5);padding:2rem 5%;
+/* ── FOOTER ── */
+footer{background:#0d0d1a;color:rgba(255,255,255,.45);padding:2rem 5%;
   display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
-.f-logo{font-family:'Clash Display',sans-serif;color:#fff;font-weight:700;font-size:1.2rem;
+.f-logo{font-family:'Clash Display',sans-serif;color:#fff;font-weight:700;font-size:1.1rem;
   display:flex;align-items:center;gap:6px}
-.f-links{display:flex;gap:1.5rem}
-.f-links a{color:rgba(255,255,255,.45);text-decoration:none;font-size:.82rem;transition:color .2s}
+.f-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+.f-links a{color:rgba(255,255,255,.4);text-decoration:none;font-size:.8rem;transition:color .2s}
 .f-links a:hover{color:#fff}
 
-/* ─── CALL SCREEN ─── */
-#callscreen{flex-direction:column;background:#0d0d1a;height:100vh;overflow:hidden}
+/* ════════════════════════════════
+   JOINING SCREEN
+════════════════════════════════ */
+#joiningscreen{flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#0d0d1a,#1a1a3e);min-height:100vh;padding:1.5rem;
+  overflow-y:auto}
+.joining-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:24px;padding:2rem;max-width:400px;width:100%;text-align:center}
+.jc-logo{font-family:'Clash Display',sans-serif;font-size:1.4rem;color:var(--e);font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:1.2rem}
+.jc-title{font-family:'Clash Display',sans-serif;font-size:1.4rem;color:#fff;font-weight:700;margin-bottom:.3rem}
+.jc-sub{color:rgba(255,255,255,.45);font-size:.82rem;margin-bottom:1.3rem;line-height:1.6}
+.preview-local{width:100%;height:170px;border-radius:14px;overflow:hidden;background:#111;margin-bottom:.9rem;position:relative}
+.preview-local video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.no-cam{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.3);font-size:.82rem;flex-direction:column;gap:.5rem;background:#111}
+.name-inp{width:100%;padding:.82rem 1.1rem;background:rgba(255,255,255,.07);
+  border:2px solid rgba(255,255,255,.1);border-radius:14px;
+  font-size:.92rem;color:#fff;font-family:inherit;outline:none;margin-bottom:.75rem;transition:border .2s}
+.name-inp::placeholder{color:rgba(255,255,255,.22)}
+.name-inp:focus{border-color:rgba(91,94,244,.5)}
+.btn-join-room{width:100%;padding:.95rem;background:var(--e);color:#fff;border:none;border-radius:14px;
+  font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s;
+  box-shadow:0 6px 20px rgba(91,94,244,.35)}
+.btn-join-room:hover{background:var(--ed);transform:translateY(-2px)}
+.btn-join-room:disabled{opacity:.6;transform:none;cursor:not-allowed}
+.join-back{margin-top:1rem;font-size:.78rem;color:rgba(255,255,255,.3);cursor:pointer;transition:color .2s;border:none;background:none}
+.join-back:hover{color:rgba(255,255,255,.7)}
+
+/* ════════════════════════════════
+   CALL SCREEN
+════════════════════════════════ */
+#callscreen{flex-direction:column;background:#080816;overflow:hidden}
 
 .call-header{display:flex;align-items:center;justify-content:space-between;
-  padding:.9rem 1.5rem;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.07)}
-.call-logo{font-family:'Clash Display',sans-serif;color:#fff;font-size:1.2rem;font-weight:700;
+  padding:.7rem 1rem;background:rgba(255,255,255,.04);
+  border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;z-index:30}
+.call-logo{font-family:'Clash Display',sans-serif;color:#fff;font-size:1.1rem;font-weight:700;
   display:flex;align-items:center;gap:6px}
-.room-info{display:flex;align-items:center;gap:8px}
-.room-id-badge{background:rgba(91,94,244,.2);color:#a5a7ff;padding:.35rem .9rem;
-  border-radius:50px;font-size:.78rem;font-weight:600;border:1px solid rgba(91,94,244,.3)}
-.call-timer{color:rgba(255,255,255,.5);font-size:.82rem;min-width:60px;text-align:right}
+.room-info{display:flex;align-items:center;gap:7px;flex:1;justify-content:center;min-width:0}
+.room-id-badge{background:rgba(91,94,244,.2);color:#a5a7ff;padding:.28rem .8rem;
+  border-radius:50px;font-size:.7rem;font-weight:600;border:1px solid rgba(91,94,244,.25);
+  cursor:pointer;transition:background .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.room-id-badge:hover{background:rgba(91,94,244,.35)}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#444;flex-shrink:0;transition:background .3s}
+.conn-dot.green{background:var(--g);animation:pd .8s infinite}
+.conn-dot.yellow{background:#f59e0b;animation:pd .8s infinite}
+.call-timer{color:rgba(255,255,255,.45);font-size:.75rem;min-width:50px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0}
 
-.call-body{display:flex;flex:1;gap:0;overflow:hidden}
+/* BODY */
+.call-body{display:flex;flex:1;overflow:hidden;position:relative}
 
 /* VIDEO AREA */
-.video-area{flex:1;position:relative;background:#080816;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.remote-video-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
-#remoteVideo{width:100%;height:100%;object-fit:cover;background:#000}
-.remote-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;color:rgba(255,255,255,.5)}
-.rp-avatar{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:2.8rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff4d9e,#ff6b6b)}
-.rp-name{font-size:1.1rem;font-weight:600;color:rgba(255,255,255,.8)}
-.rp-status{font-size:.82rem;color:rgba(255,255,255,.4)}
+.video-area{flex:1;position:relative;background:#060612;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.remote-video-wrap{width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center}
+#remoteVideo{width:100%;height:100%;object-fit:cover;display:none}
+.remote-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem}
+.rp-avatar{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff4d9e,#ff6b6b);
+  box-shadow:0 8px 32px rgba(255,77,158,.3)}
+.rp-name{font-size:1rem;font-weight:600;color:rgba(255,255,255,.8)}
+.rp-status{font-size:.78rem;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:5px}
 
-/* LOCAL VIDEO PIP */
-.local-pip{position:absolute;bottom:16px;right:16px;width:160px;height:110px;
-  border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.15);
-  box-shadow:0 8px 24px rgba(0,0,0,.5);cursor:move;z-index:10}
-#localVideo{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.local-placeholder{width:100%;height:100%;background:linear-gradient(135deg,#5b5ef4,#8b5cf6);
-  display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff}
+/* LOCAL PIP */
+.local-pip{position:absolute;bottom:80px;right:12px;width:140px;height:100px;
+  border-radius:12px;overflow:hidden;border:2px solid rgba(255,255,255,.15);
+  box-shadow:0 6px 20px rgba(0,0,0,.5);z-index:12;cursor:move;transition:border-color .2s;touch-action:none}
+.local-pip:hover{border-color:rgba(91,94,244,.6)}
+#localVideo{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
+.local-placeholder{position:absolute;inset:0;background:linear-gradient(135deg,#5b5ef4,#8b5cf6);
+  display:none;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#fff}
 
-/* STATUS OVERLAYS */
-.connecting-overlay{position:absolute;inset:0;background:rgba(8,8,22,.9);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;z-index:20}
-.spinner{width:50px;height:50px;border:3px solid rgba(91,94,244,.2);
+/* CONNECTION OVERLAYS */
+.connecting-overlay{position:absolute;inset:0;background:rgba(6,6,18,.92);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;z-index:25;
+  backdrop-filter:blur(4px)}
+.spinner{width:46px;height:46px;border:3px solid rgba(91,94,244,.15);
   border-top-color:var(--e);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.conn-text{color:rgba(255,255,255,.7);font-size:1rem;font-weight:500}
-.conn-sub{color:rgba(255,255,255,.4);font-size:.82rem;text-align:center;max-width:280px}
+.conn-text{color:rgba(255,255,255,.7);font-size:.95rem;font-weight:600}
+.conn-sub{color:rgba(255,255,255,.38);font-size:.78rem;text-align:center;max-width:260px;line-height:1.5}
 
 /* INVITE OVERLAY */
-.invite-overlay{position:absolute;inset:0;background:rgba(8,8,22,.85);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;z-index:19;padding:2rem}
-.invite-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
-  border-radius:20px;padding:2rem;max-width:380px;width:100%;text-align:center}
-.invite-title{font-family:'Clash Display',sans-serif;font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:.4rem}
-.invite-sub{color:rgba(255,255,255,.5);font-size:.85rem;margin-bottom:1.2rem;line-height:1.6}
-.invite-link{background:rgba(91,94,244,.15);border:1px solid rgba(91,94,244,.3);
-  border-radius:10px;padding:.7rem 1rem;font-size:.8rem;color:#a5a7ff;word-break:break-all;
-  margin-bottom:.8rem;text-align:left;cursor:pointer;transition:background .2s;user-select:all}
-.invite-link:hover{background:rgba(91,94,244,.25)}
-.btn-copy{width:100%;padding:.75rem;background:var(--e);color:#fff;border:none;border-radius:12px;
-  font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;margin-bottom:.6rem}
+.invite-overlay{position:absolute;inset:0;background:rgba(6,6,18,.88);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:1rem;z-index:22;padding:1.5rem;
+  backdrop-filter:blur(4px)}
+.invite-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);
+  border-radius:22px;padding:1.8rem;max-width:360px;width:100%;text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.invite-title{font-family:'Clash Display',sans-serif;font-size:1.3rem;font-weight:700;color:#fff;margin-bottom:.35rem}
+.invite-sub{color:rgba(255,255,255,.45);font-size:.8rem;margin-bottom:1rem;line-height:1.6}
+.invite-link{background:rgba(91,94,244,.12);border:1px solid rgba(91,94,244,.25);
+  border-radius:10px;padding:.65rem .9rem;font-size:.72rem;color:#a5a7ff;word-break:break-all;
+  margin-bottom:.7rem;text-align:left;cursor:pointer;transition:background .2s;user-select:all;line-height:1.4}
+.invite-link:hover{background:rgba(91,94,244,.22)}
+.invite-actions{display:flex;flex-direction:column;gap:.5rem}
+.btn-copy{width:100%;padding:.7rem;background:var(--e);color:#fff;border:none;border-radius:11px;
+  font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
 .btn-copy:hover{background:var(--ed)}
-.btn-copy.copied{background:#00a060}
-.btn-share-wa{width:100%;padding:.75rem;background:#25D366;color:#fff;border:none;border-radius:12px;
-  font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-copy.copied{background:#059669}
+.btn-share-wa{width:100%;padding:.7rem;background:#25D366;color:#fff;border:none;border-radius:11px;
+  font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:7px;text-decoration:none}
 .btn-share-wa:hover{background:#1ebe5a}
-
-/* CALL CONTROLS */
-.call-controls{position:absolute;bottom:0;left:0;right:0;
-  padding:1rem 1.5rem;
-  background:linear-gradient(to top,rgba(8,8,22,.95),transparent);
-  display:flex;align-items:center;justify-content:center;gap:.9rem;z-index:15}
-.cc-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
-  transition:all .2s;position:relative}
-.cc-btn:hover{transform:scale(1.1)}
-.cc-mic{background:rgba(255,255,255,.12);color:#fff}
-.cc-cam{background:rgba(255,255,255,.12);color:#fff}
-.cc-screen{background:rgba(255,255,255,.12);color:#fff}
-.cc-chat{background:rgba(255,255,255,.12);color:#fff}
-.cc-end{background:var(--r);color:#fff;width:60px;height:60px;font-size:1.4rem}
-.cc-btn.off{background:rgba(255,80,80,.2);color:var(--r)}
-.cc-badge{position:absolute;top:-2px;right:-2px;width:16px;height:16px;
-  background:var(--e);border-radius:50%;font-size:.6rem;color:#fff;
-  display:flex;align-items:center;justify-content:center;border:2px solid #0d0d1a}
-.cc-label{font-size:.65rem;color:rgba(255,255,255,.4);margin-top:3px;display:block;text-align:center}
-.ctrl-wrap{display:flex;flex-direction:column;align-items:center}
-
-/* CHAT PANEL */
-.chat-panel{width:0;background:rgba(255,255,255,.03);border-left:1px solid rgba(255,255,255,.06);
-  display:flex;flex-direction:column;transition:width .3s;overflow:hidden}
-.chat-panel.open{width:320px}
-.chat-ph{padding:.9rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.07);
-  font-weight:600;font-size:.9rem;color:#fff;display:flex;align-items:center;justify-content:space-between}
-.chat-close{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:1.2rem;transition:color .2s}
-.chat-close:hover{color:#fff}
-.chat-msgs{flex:1;overflow-y:auto;padding:.8rem;display:flex;flex-direction:column;gap:.6rem}
-.chat-msgs::-webkit-scrollbar{width:4px}
-.chat-msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
-.cmsg{max-width:85%;padding:.6rem .9rem;border-radius:14px;font-size:.82rem;line-height:1.5;animation:mi .3s ease both}
-@keyframes mi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.cmsg.them{background:rgba(255,255,255,.09);color:rgba(255,255,255,.85);border-bottom-left-radius:4px;align-self:flex-start}
-.cmsg.me{background:var(--e);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
-.cmsg-name{font-size:.68rem;color:rgba(255,255,255,.35);margin-bottom:2px}
-.cmsg-time{font-size:.65rem;opacity:.4;margin-top:2px;text-align:right}
-.chat-sys{text-align:center;font-size:.72rem;color:rgba(255,255,255,.3);padding:.2rem;font-style:italic}
-.chat-inp-row{padding:.7rem .8rem;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:.5rem;align-items:center}
-.chat-input{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
-  border-radius:20px;padding:.55rem .9rem;font-size:.85rem;color:#fff;
-  outline:none;font-family:inherit;transition:border .2s}
-.chat-input::placeholder{color:rgba(255,255,255,.3)}
-.chat-input:focus{border-color:rgba(91,94,244,.5)}
-.chat-send-btn{width:36px;height:36px;border-radius:50%;background:var(--e);color:#fff;border:none;
-  cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
-.chat-send-btn:hover{background:var(--ed);transform:scale(1.1)}
+.waiting-pulse{display:flex;align-items:center;justify-content:center;gap:6px;
+  margin-top:.7rem;color:rgba(255,255,255,.3);font-size:.72rem}
+.wp-dot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:pd .8s ease-in-out infinite}
+.wp-dot:nth-child(2){animation-delay:.15s}
+.wp-dot:nth-child(3){animation-delay:.3s}
 
 /* SCREEN SHARE INDICATOR */
-.screen-indicator{position:absolute;top:12px;left:50%;transform:translateX(-50%);
-  background:rgba(91,94,244,.85);color:#fff;padding:.4rem 1rem;border-radius:50px;
-  font-size:.78rem;font-weight:600;z-index:16;display:none;backdrop-filter:blur(8px)}
+.screen-indicator{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  background:rgba(91,94,244,.9);color:#fff;padding:.35rem .9rem;border-radius:50px;
+  font-size:.72rem;font-weight:600;z-index:18;display:none;backdrop-filter:blur(8px);white-space:nowrap}
 .screen-indicator.show{display:block}
 
-/* JOINING SCREEN */
-#joiningscreen{flex-direction:column;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,#0d0d1a,#1a1a3e);min-height:100vh;padding:2rem}
-.joining-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-  border-radius:24px;padding:2.5rem;max-width:420px;width:100%;text-align:center}
-.jc-logo{font-family:'Clash Display',sans-serif;font-size:1.5rem;color:var(--e);font-weight:700;
-  display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:1.5rem}
-.jc-title{font-family:'Clash Display',sans-serif;font-size:1.5rem;color:#fff;font-weight:700;margin-bottom:.4rem}
-.jc-sub{color:rgba(255,255,255,.5);font-size:.85rem;margin-bottom:1.5rem;line-height:1.6}
-.name-inp{width:100%;padding:.85rem 1.1rem;background:rgba(255,255,255,.07);
-  border:2px solid rgba(255,255,255,.1);border-radius:14px;
-  font-size:.95rem;color:#fff;font-family:inherit;outline:none;margin-bottom:.8rem;transition:border .2s}
-.name-inp::placeholder{color:rgba(255,255,255,.25)}
-.name-inp:focus{border-color:rgba(91,94,244,.5)}
-.btn-join-room{width:100%;padding:1rem;background:var(--e);color:#fff;border:none;border-radius:14px;
-  font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s;
-  box-shadow:0 6px 20px rgba(91,94,244,.4)}
-.btn-join-room:hover{background:var(--ed);transform:translateY(-2px)}
-.preview-local{width:100%;height:180px;border-radius:14px;overflow:hidden;background:#000;margin-bottom:1rem;position:relative}
-.preview-local video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.preview-local .no-cam{display:flex;align-items:center;justify-content:center;height:100%;
-  color:rgba(255,255,255,.3);font-size:.85rem;flex-direction:column;gap:.5rem}
+/* NETWORK QUALITY BADGE */
+.quality-badge{position:absolute;top:10px;left:10px;z-index:18;
+  display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.45);
+  border-radius:20px;padding:.25rem .6rem;font-size:.65rem;color:rgba(255,255,255,.7)}
+.quality-bars{display:flex;align-items:flex-end;gap:2px;height:10px}
+.qb{width:3px;background:rgba(255,255,255,.3);border-radius:1px}
+.qb.active{background:var(--g)}
+.qb:nth-child(1){height:4px}
+.qb:nth-child(2){height:6px}
+.qb:nth-child(3){height:8px}
+.qb:nth-child(4){height:10px}
 
-/* STATUS BAR */
+/* ── CALL CONTROLS ── */
+.call-controls{position:absolute;bottom:0;left:0;right:0;
+  padding:.75rem 1rem 1rem;
+  background:linear-gradient(to top,rgba(6,6,18,.98) 0%,rgba(6,6,18,.6) 70%,transparent 100%);
+  display:flex;align-items:center;justify-content:center;gap:.6rem;z-index:15;flex-wrap:wrap}
+.cc-btn{width:50px;height:50px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  transition:all .2s;position:relative;flex-shrink:0;-webkit-user-select:none;user-select:none}
+.cc-btn:active{transform:scale(.9)!important}
+.cc-mic,.cc-cam,.cc-screen,.cc-chat,.cc-react,.cc-more{background:rgba(255,255,255,.1);color:#fff}
+.cc-mic:hover,.cc-cam:hover,.cc-screen:hover,.cc-chat:hover{background:rgba(255,255,255,.18)}
+.cc-end{background:var(--r);color:#fff;width:56px;height:56px;font-size:1.3rem;box-shadow:0 4px 16px rgba(255,68,68,.4)}
+.cc-end:hover{background:#e53e3e;transform:scale(1.08)!important}
+.cc-btn.off{background:rgba(255,80,80,.18);color:#ff6b6b}
+.cc-badge{position:absolute;top:-3px;right:-3px;width:16px;height:16px;
+  background:var(--e);border-radius:50%;font-size:.58rem;color:#fff;
+  display:flex;align-items:center;justify-content:center;border:2px solid #080816;font-weight:700}
+.ctrl-wrap{display:flex;flex-direction:column;align-items:center;gap:3px}
+.cc-label{font-size:.6rem;color:rgba(255,255,255,.38);text-align:center;white-space:nowrap}
+
+/* REACTIONS PICKER */
+.reactions-picker{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);
+  background:rgba(20,20,40,.95);border:1px solid rgba(255,255,255,.1);
+  border-radius:50px;padding:.5rem .8rem;display:none;gap:.4rem;z-index:20;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);backdrop-filter:blur(8px)}
+.reactions-picker.show{display:flex}
+.react-btn{font-size:1.4rem;cursor:pointer;border:none;background:none;padding:.2rem .3rem;
+  border-radius:8px;transition:transform .15s}
+.react-btn:hover{transform:scale(1.3)}
+
+/* FLOATING REACTIONS */
+.float-react{position:absolute;bottom:100px;font-size:2rem;z-index:30;pointer-events:none;
+  animation:floatUp 2.5s ease-out forwards}
+@keyframes floatUp{
+  0%{opacity:1;transform:translateY(0) scale(1)}
+  80%{opacity:.8;transform:translateY(-180px) scale(1.2)}
+  100%{opacity:0;transform:translateY(-220px) scale(.8)}
+}
+
+/* ── CHAT PANEL ── */
+.chat-panel{width:0;background:rgba(10,10,26,.98);border-left:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;transition:width .28s;overflow:hidden;flex-shrink:0;z-index:20}
+.chat-panel.open{width:300px}
+.chat-ph{padding:.85rem 1rem;border-bottom:1px solid rgba(255,255,255,.07);
+  font-weight:600;font-size:.88rem;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.chat-close{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:1.1rem;transition:color .2s;padding:.2rem}
+.chat-close:hover{color:#fff}
+.chat-msgs{flex:1;overflow-y:auto;padding:.7rem;display:flex;flex-direction:column;gap:.5rem;overscroll-behavior:contain}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+.cmsg{max-width:88%;padding:.55rem .85rem;border-radius:14px;font-size:.8rem;line-height:1.5;animation:mi .25s ease both;word-break:break-word}
+@keyframes mi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cmsg.them{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);border-bottom-left-radius:3px;align-self:flex-start}
+.cmsg.me{background:var(--e);color:#fff;border-bottom-right-radius:3px;align-self:flex-end}
+.cmsg-name{font-size:.65rem;color:rgba(255,255,255,.32);margin-bottom:1px;font-weight:600}
+.cmsg-time{font-size:.6rem;opacity:.38;margin-top:2px;text-align:right}
+.chat-sys{text-align:center;font-size:.68rem;color:rgba(255,255,255,.25);padding:.15rem;font-style:italic}
+.chat-inp-row{padding:.6rem .7rem;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:.45rem;align-items:center;flex-shrink:0}
+.chat-input{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:.5rem .85rem;font-size:.82rem;color:#fff;
+  outline:none;font-family:inherit;transition:border .2s;min-width:0}
+.chat-input::placeholder{color:rgba(255,255,255,.25)}
+.chat-input:focus{border-color:rgba(91,94,244,.5)}
+.chat-send-btn{width:34px;height:34px;border-radius:50%;background:var(--e);color:#fff;border:none;
+  cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.chat-send-btn:hover{background:var(--ed);transform:scale(1.1)}
+
+/* ── PARTICIPANTS PANEL ── */
+.participants-panel{width:0;background:rgba(10,10,26,.98);border-left:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;transition:width .28s;overflow:hidden;flex-shrink:0;z-index:20}
+.participants-panel.open{width:240px}
+.pp-header{padding:.85rem 1rem;border-bottom:1px solid rgba(255,255,255,.07);
+  font-weight:600;font-size:.88rem;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.pp-list{flex:1;overflow-y:auto;padding:.7rem}
+.pp-item{display:flex;align-items:center;gap:.7rem;padding:.6rem .5rem;border-radius:10px;transition:background .2s}
+.pp-item:hover{background:rgba(255,255,255,.05)}
+.pp-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;font-weight:700;color:#fff;flex-shrink:0}
+.pp-info{flex:1;min-width:0}
+.pp-name{font-size:.82rem;color:rgba(255,255,255,.85);font-weight:600;truncate:ellipsis;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-role{font-size:.65rem;color:rgba(255,255,255,.35)}
+.pp-icons{display:flex;gap:3px;font-size:.75rem}
+
+/* ── STATUS BAR ── */
 .status-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;
-  background:rgba(13,13,26,.95);border-top:1px solid rgba(255,255,255,.06);
-  padding:.5rem 1rem;display:none;align-items:center;justify-content:center;gap:.5rem;
-  font-size:.78rem;color:rgba(255,255,255,.6)}
+  background:rgba(10,10,26,.97);border-top:1px solid rgba(255,255,255,.06);
+  padding:.45rem 1rem;display:none;align-items:center;justify-content:center;gap:.5rem;
+  font-size:.75rem;color:rgba(255,255,255,.55)}
 .status-bar.show{display:flex}
-.sb-dot{width:7px;height:7px;border-radius:50%;background:var(--g)}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:var(--g)}
 
-/* TOAST */
-.toast{position:fixed;top:80px;right:20px;z-index:500;
-  background:rgba(13,13,26,.95);color:#fff;
-  padding:.7rem 1.2rem;border-radius:12px;font-size:.85rem;font-weight:500;
-  border-left:4px solid var(--e);box-shadow:0 8px 24px rgba(0,0,0,.3);
-  transform:translateX(120%);transition:transform .3s;max-width:300px}
+/* ── TOAST ── */
+.toast{position:fixed;top:70px;right:16px;z-index:500;
+  background:rgba(10,10,26,.96);color:#fff;
+  padding:.65rem 1.1rem;border-radius:12px;font-size:.82rem;font-weight:500;
+  border-left:3px solid var(--e);box-shadow:0 8px 24px rgba(0,0,0,.35);
+  transform:translateX(calc(100% + 20px));transition:transform .3s cubic-bezier(.34,1.56,.64,1);max-width:280px;line-height:1.4}
 .toast.show{transform:translateX(0)}
 .toast.success{border-color:var(--g)}
 .toast.error{border-color:var(--r)}
+.toast.info{border-color:var(--s)}
 
-/* RESPONSIVE */
-@media(max-width:700px){
-  .chat-panel.open{width:100%;position:absolute;top:0;right:0;bottom:0;z-index:18}
-  .feats{grid-template-columns:1fr}
+/* ── EMOJI / REACTION BURST ── */
+.emoji-burst{position:fixed;pointer-events:none;z-index:400;font-size:2.5rem;
+  animation:burst .8s ease-out forwards}
+@keyframes burst{
+  0%{opacity:1;transform:scale(0) rotate(0deg)}
+  50%{opacity:1;transform:scale(1.4) rotate(15deg)}
+  100%{opacity:0;transform:scale(1) rotate(-10deg) translateY(-60px)}
+}
+
+/* ════════════════════════════════
+   MOBILE RESPONSIVE
+════════════════════════════════ */
+@media(max-width:768px){
+  /* Landing */
+  nav{padding:.75rem 4%}
+  .nav-link{display:none}
+  h1{font-size:clamp(2rem,8vw,3rem)}
+  .hero{padding:3rem 4% 2.5rem}
+  .stats-bar{gap:1.5rem}
+  .steps::before{display:none}
+  .step{min-width:140px}
+  .feats{grid-template-columns:1fr 1fr}
   .prem-cards{flex-direction:column;align-items:center}
-  .local-pip{width:110px;height:80px}
+  .pc{max-width:90%;min-width:unset;width:100%}
+  footer{flex-direction:column;text-align:center;gap:.8rem}
+  .f-links{justify-content:center}
+
+  /* Call screen */
+  .call-header{padding:.6rem .8rem}
+  .room-id-badge{max-width:120px;font-size:.65rem}
+  .local-pip{width:110px;height:78px;bottom:72px;right:8px}
+  .call-controls{gap:.45rem;padding:.6rem .5rem .85rem}
+  .cc-btn{width:44px;height:44px;font-size:1rem}
+  .cc-end{width:50px;height:50px;font-size:1.2rem}
+  .cc-label{font-size:.55rem}
+
+  /* Chat/participants go full screen on mobile */
+  .chat-panel.open{
+    width:100%;position:absolute;top:0;right:0;bottom:0;z-index:28;
+    border-left:none}
+  .participants-panel.open{
+    width:100%;position:absolute;top:0;right:0;bottom:0;z-index:28;
+    border-left:none}
+}
+
+@media(max-width:480px){
+  .feats{grid-template-columns:1fr}
+  .hero-btns{flex-direction:column;align-items:center}
+  .btn-p,.btn-s{width:100%;max-width:280px}
+  .room-box{padding:1.5rem}
+  .joining-card{padding:1.5rem}
+  .invite-card{padding:1.4rem}
+  .call-controls{gap:.35rem}
+  .ctrl-wrap .cc-label{display:none}
+  .cc-btn{width:42px;height:42px}
+  .cc-end{width:48px;height:48px}
+}
+
+/* Very small screens */
+@media(max-width:360px){
+  .cc-btn{width:38px;height:38px;font-size:.9rem}
+  .cc-end{width:44px;height:44px}
+}
+
+/* Safe area for devices with notch/home bar */
+@supports(padding-bottom: env(safe-area-inset-bottom)){
+  .call-controls{padding-bottom:calc(1rem + env(safe-area-inset-bottom))}
+  .local-pip{bottom:calc(80px + env(safe-area-inset-bottom))}
 }
 </style>
 </head>
 <body>
 
-<!-- ─── TOAST ─── -->
 <div class="toast" id="toast"></div>
 
-<!-- ─── LANDING SCREEN ─── -->
+<!-- ════════════════════════════════
+     LANDING SCREEN
+════════════════════════════════ -->
 <section class="screen active" id="landing">
-
-  <!-- NAV -->
   <nav>
-    <a href="#" class="logo" onclick="goHome(event)"><div class="logo-dot"></div>HelloCall</a>
-    <button class="nav-cta" onclick="scrollToRoom()">Start Free Call →</button>
+    <a class="logo" onclick="goHome(event)" href="#"><div class="logo-dot"></div>HelloCall</a>
+    <div class="nav-right">
+      <button class="nav-link" onclick="document.getElementById('feat-sec').scrollIntoView({behavior:'smooth'})">Features</button>
+      <button class="nav-link" onclick="document.getElementById('premium').scrollIntoView({behavior:'smooth'})">Pricing</button>
+      <button class="nav-cta" onclick="scrollToRoom()">Start Free Call →</button>
+    </div>
   </nav>
 
-  <!-- HERO -->
   <div class="hero">
     <div class="hero-bg">
       <div class="grid-bg"></div>
-      <div class="orb o1"></div>
-      <div class="orb o2"></div>
-      <div class="orb o3"></div>
+      <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
     </div>
     <div class="hero-inner">
-      <div class="badge"><div class="bdot"></div>🔥 Real WebRTC Video Calls — No App Needed</div>
+      <div class="badge"><div class="bdot"></div>🔥 Real WebRTC — No App Needed</div>
       <h1>Talk. See.<br><span class="grad">Connect Anyone.</span></h1>
-      <p>HelloCall gives you real HD video calls and live chat — right in your browser. Share a link, your friend clicks it, and you're live. That simple.</p>
+      <p>HD video calls right in your browser. Share a link, your friend clicks it, you're live. No sign-up, no download, ever.</p>
       <div class="hero-btns">
         <button class="btn-p" onclick="scrollToRoom()">📹 Start Video Call Now</button>
         <button class="btn-s" onclick="document.getElementById('feat-sec').scrollIntoView({behavior:'smooth'})">✨ See Features</button>
       </div>
-
-      <!-- ANIMATED CALL CARD -->
+      <div class="stats-bar">
+        <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl">Free to start</div></div>
+        <div class="stat"><div class="stat-num">0</div><div class="stat-lbl">Downloads needed</div></div>
+        <div class="stat"><div class="stat-num">E2E</div><div class="stat-lbl">Encrypted</div></div>
+        <div class="stat"><div class="stat-num">HD</div><div class="stat-lbl">Video quality</div></div>
+      </div>
       <div class="preview-card">
         <div class="vs">
           <div class="vstars"></div>
           <div class="vbar">
-            <div class="vstatus"><div class="slive"></div>Live • 04:27 · HD 1080p</div>
-            <div style="font-size:.72rem;color:rgba(255,255,255,.35)">🔒 Encrypted</div>
+            <div class="vstatus"><div class="slive"></div>Live · HD 1080p</div>
+            <div style="font-size:.68rem;color:rgba(255,255,255,.3)">🔒 Encrypted</div>
           </div>
           <div class="vavatars">
             <div class="vav va1">A</div>
@@ -389,7 +568,8 @@ footer{background:#0d0d1a;color:rgba(255,255,255,.5);padding:2rem 5%;
             <div class="vstatus">Arjun & Zara on call</div>
             <div class="vctrls">
               <div class="vcb">🎙️</div><div class="vcb">📷</div>
-              <div class="vcb">💬</div><div class="vcb" style="background:rgba(255,60,60,.3)">📵</div>
+              <div class="vcb">💬</div>
+              <div class="vcb" style="background:rgba(255,60,60,.3)">📵</div>
             </div>
           </div>
         </div>
@@ -397,36 +577,47 @@ footer{background:#0d0d1a;color:rgba(255,255,255,.5);padding:2rem 5%;
     </div>
   </div>
 
-  <!-- ROOM / START CALL -->
+  <!-- ROOM / JOIN -->
   <div class="room-section" id="roomsec">
     <div class="room-box">
-      <div class="room-title">🚀 Start a New Call</div>
-      <div class="room-sub">Create a room, share the link with anyone — they join instantly, no account needed.</div>
-      <input class="room-inp" id="yourName" placeholder="Your name (e.g. Arjun)" maxlength="30">
+      <div class="room-title">🚀 Start or Join a Call</div>
+      <div class="room-sub">Create a room or paste a Room ID to join someone's call.</div>
+      <input class="room-inp" id="yourName" placeholder="Your name (e.g. Arjun)" maxlength="30" autocomplete="off">
       <button class="btn-start" onclick="createRoom()">📹 Create My Room & Start Call</button>
-      <div class="divider">or join existing room</div>
-      <input class="room-inp" id="joinRoomId" placeholder="Paste Room ID here (e.g. HC-xxxx)">
-      <button class="btn-join" onclick="joinRoom()">🔗 Join Room</button>
+      <div class="divider">or join an existing room</div>
+      <input class="room-inp" id="joinRoomId" placeholder="Paste Room ID here" maxlength="120" autocomplete="off">
+      <button class="btn-join-land" onclick="joinRoom()">🔗 Join Room</button>
     </div>
-    <div style="font-size:.8rem;color:#888;text-align:center;max-width:420px;line-height:1.6">
-      💡 <strong>How it works:</strong> You create a room → Share the Room ID or link → Your friend joins → Real video call starts. Uses WebRTC — peer-to-peer, end-to-end encrypted.
+    <div style="font-size:.78rem;color:#999;text-align:center;max-width:400px;line-height:1.65">
+      💡 <strong>How it works:</strong> Create room → Share link → Friend joins → Real video call. Peer-to-peer, end-to-end encrypted via WebRTC.
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="how-section">
+    <div class="sec-tag">📖 Simple 3-Step Process</div>
+    <h2 class="sec-t" style="margin-bottom:.8rem">Up and running <span style="color:var(--e)">in seconds</span></h2>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><h4>Create Room</h4><p>Enter your name, click create. Your room is ready instantly.</p></div>
+      <div class="step"><div class="step-num">2</div><h4>Share Link</h4><p>Copy & share the link via WhatsApp, SMS, or any messenger.</p></div>
+      <div class="step"><div class="step-num">3</div><h4>Connect Live</h4><p>Friend clicks link, enters name, and you're on a live HD call.</p></div>
     </div>
   </div>
 
   <!-- FEATURES -->
   <div class="feat-section" id="feat-sec">
-    <div style="text-align:center">
-      <div class="sec-tag">⚡ Real Features</div>
-      <h2 class="sec-t">Everything packed in, <span style="color:var(--e)">all working</span></h2>
-      <p class="sec-s">HelloCall uses real WebRTC technology — the same tech powering Google Meet & WhatsApp calls.</p>
-    </div>
+    <div class="sec-tag">⚡ Real Features</div>
+    <h2 class="sec-t">Everything you need, <span style="color:var(--e)">nothing you don't</span></h2>
+    <p class="sec-s">HelloCall uses real WebRTC — the same tech behind Google Meet & WhatsApp Calls.</p>
     <div class="feats">
-      <div class="fc"><div class="fi fi1">📹</div><div class="ft">Real HD Video Calls</div><div class="fd">Browser-to-browser WebRTC calls with no app download. Crystal clear up to 1080p based on your connection speed.</div></div>
-      <div class="fc"><div class="fi fi2">💬</div><div class="ft">Live In-Call Chat</div><div class="fd">Send messages while on a call. Chat history stays for the duration of the call. Works even if camera is off.</div></div>
-      <div class="fc"><div class="fi fi3">🖥️</div><div class="ft">Real Screen Sharing</div><div class="fd">Share your entire screen, a window, or a browser tab with one click. Works in Chrome, Edge, and Firefox.</div></div>
-      <div class="fc"><div class="fi fi4">🔒</div><div class="ft">Peer-to-Peer Encrypted</div><div class="fd">All video, audio & chat goes directly device-to-device. No server stores your call content. Private by design.</div></div>
-      <div class="fc"><div class="fi fi5">🔗</div><div class="ft">Instant Share Link</div><div class="fd">One-click copy your room link or share directly on WhatsApp. Anyone can join — no account, no download needed.</div></div>
-      <div class="fc"><div class="fi fi6">📱</div><div class="ft">Works on Any Device</div><div class="fd">Mobile, tablet, laptop, desktop — any browser works. Chrome and Edge give the best experience with all features.</div></div>
+      <div class="fc"><div class="fi fi1">📹</div><div class="ft">HD Video Calls</div><div class="fd">Crystal-clear up to 1080p. Browser-to-browser, no app needed.</div></div>
+      <div class="fc"><div class="fi fi2">💬</div><div class="ft">Live In-Call Chat</div><div class="fd">Send messages in real-time. Works even if camera is off.</div></div>
+      <div class="fc"><div class="fi fi3">🖥️</div><div class="ft">Screen Sharing</div><div class="fd">Share your screen, a window, or a tab with one click.</div></div>
+      <div class="fc"><div class="fi fi4">🔒</div><div class="ft">P2P Encrypted</div><div class="fd">Device-to-device. No server sees your video or audio. Ever.</div></div>
+      <div class="fc"><div class="fi fi5">🔗</div><div class="ft">Instant Share Link</div><div class="fd">Copy link or share on WhatsApp. Join with zero setup.</div></div>
+      <div class="fc"><div class="fi fi6">📱</div><div class="ft">All Devices</div><div class="fd">Mobile, tablet, desktop — any modern browser works.</div></div>
+      <div class="fc"><div class="fi fi7">😄</div><div class="ft">Live Reactions <span class="feat-badge">NEW</span></div><div class="fd">Send floating emoji reactions during a call to express yourself.</div></div>
+      <div class="fc"><div class="fi fi8">👥</div><div class="ft">Participant Panel <span class="feat-badge">NEW</span></div><div class="fd">See who's in the call. View mic & camera status at a glance.</div></div>
     </div>
   </div>
 
@@ -434,104 +625,138 @@ footer{background:#0d0d1a;color:rgba(255,255,255,.5);padding:2rem 5%;
   <div class="prem-section" id="premium">
     <div class="prem-inner">
       <div class="sec-tag" style="background:rgba(91,94,244,.2);color:#a5a7ff">💎 Premium Plans</div>
-      <h2 class="prem-t">Want more? Go <span style="color:var(--g)">Premium</span></h2>
-      <p class="prem-s">Free plan includes unlimited 1-on-1 calls. Premium unlocks group calls, custom room names, call recording, priority support, and more.</p>
+      <h2 class="prem-t">Power up with <span style="color:var(--g)">Premium</span></h2>
+      <p class="prem-s">Free plan covers unlimited 1-on-1 calls. Go Premium for groups, recording, branding & more.</p>
       <div class="prem-cards">
         <div class="pc">
           <div class="pc-icon">🆓</div>
           <div class="pc-name">Free</div>
           <div class="pc-price">₹0</div>
-          <div class="pc-sub">1-on-1 calls · Live chat · Screen share</div>
+          <div class="pc-period">forever</div>
+          <ul class="pc-feats">
+            <li>1-on-1 video calls</li>
+            <li>Live in-call chat</li>
+            <li>Screen sharing</li>
+            <li>Live emoji reactions</li>
+            <li>WhatsApp room sharing</li>
+          </ul>
         </div>
         <div class="pc hot">
           <div class="pc-icon">🔥</div>
           <div class="pc-name">Pro</div>
-          <div class="pc-price">₹199/mo</div>
-          <div class="pc-sub">Group calls up to 10 · Recording · Custom room · No ads</div>
+          <div class="pc-price">₹199</div>
+          <div class="pc-period">per month</div>
+          <ul class="pc-feats">
+            <li>Group calls up to 10 people</li>
+            <li>Call recording (cloud)</li>
+            <li>Custom room name/link</li>
+            <li>Background blur & effects</li>
+            <li>No time limits</li>
+            <li>Priority support</li>
+          </ul>
         </div>
         <div class="pc">
           <div class="pc-icon">🏢</div>
           <div class="pc-name">Team</div>
-          <div class="pc-price">₹499/mo</div>
-          <div class="pc-sub">Up to 50 users · Admin panel · Webinar · Branding</div>
+          <div class="pc-price">₹499</div>
+          <div class="pc-period">per month</div>
+          <ul class="pc-feats">
+            <li>Up to 50 participants</li>
+            <li>Admin dashboard</li>
+            <li>Webinar mode</li>
+            <li>Custom branding & logo</li>
+            <li>Analytics & reports</li>
+            <li>Dedicated support</li>
+          </ul>
         </div>
       </div>
-      <a href="https://wa.me/917505640600?text=Hi%2C%20I%20want%20to%20know%20more%20about%20HelloCall%20Premium%20plans%20%F0%9F%91%8B" target="_blank" class="btn-wa">
-        <span style="font-size:1.3rem">💬</span> Chat on WhatsApp for Premium Details
+      <a href="https://wa.me/917505640600?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20HelloCall%20Premium%20%F0%9F%91%8B" target="_blank" class="btn-wa">
+        <span style="font-size:1.2rem">💬</span> Chat on WhatsApp for Premium
       </a>
-      <div class="wa-note">📞 +91 75056 40600 · Usually replies within 1 hour</div>
+      <div class="wa-note">📞 +91 75056 40600 · Replies within 1 hour</div>
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer>
     <div class="f-logo"><div class="logo-dot"></div>HelloCall</div>
-    <div style="font-size:.82rem">Real WebRTC video calls in your browser. Free forever.</div>
+    <div style="font-size:.78rem">Real WebRTC video calls — free forever.</div>
     <div class="f-links">
       <a href="#" onclick="scrollToRoom()">Start Call</a>
-      <a href="#premium">Premium</a>
+      <a href="#premium">Pricing</a>
       <a href="https://wa.me/917505640600" target="_blank">Support</a>
     </div>
   </footer>
 </section>
 
-<!-- ─── JOINING SCREEN ─── -->
+<!-- ════════════════════════════════
+     JOINING SCREEN
+════════════════════════════════ -->
 <section class="screen" id="joiningscreen">
   <div class="joining-card">
     <div class="jc-logo"><div class="logo-dot"></div>HelloCall</div>
     <div class="jc-title">📹 Join Call</div>
-    <div class="jc-sub" id="joiningMsg">You've been invited to a HelloCall room. Enter your name and allow camera access to join.</div>
+    <div class="jc-sub" id="joiningMsg">Enter your name and allow camera access to join the room.</div>
     <div class="preview-local">
       <video id="previewVideo" autoplay muted playsinline></video>
-      <div class="no-cam" id="noCamMsg" style="display:none">📷 Camera access needed<br><span style="font-size:.72rem">Allow camera in browser popup</span></div>
+      <div class="no-cam" id="noCamMsg" style="display:none">
+        📷 Camera not available<br>
+        <span style="font-size:.7rem;opacity:.7">You can still join with audio only</span>
+      </div>
     </div>
-    <input class="name-inp" id="joinerName" placeholder="Your name (e.g. Zara)" maxlength="30">
+    <input class="name-inp" id="joinerName" placeholder="Your name (e.g. Zara)" maxlength="30" autocomplete="off">
     <button class="btn-join-room" id="joinBtn" onclick="enterRoom()">✅ Join Now</button>
-    <div style="margin-top:.8rem;font-size:.74rem;color:rgba(255,255,255,.3);text-align:center">
-      Your camera preview is only visible to you until you join
-    </div>
+    <button class="join-back" onclick="cleanupAndGoLanding()">← Back to Home</button>
   </div>
 </section>
 
-<!-- ─── CALL SCREEN ─── -->
+<!-- ════════════════════════════════
+     CALL SCREEN
+════════════════════════════════ -->
 <section class="screen" id="callscreen">
 
-  <!-- CALL HEADER -->
   <div class="call-header">
     <div class="call-logo"><div class="logo-dot"></div>HelloCall</div>
     <div class="room-info">
-      <div class="room-id-badge" id="roomIdDisplay">Room: —</div>
-      <div style="font-size:.72rem;color:rgba(255,255,255,.3)" id="connStatus">Waiting...</div>
+      <div class="conn-dot" id="connDot"></div>
+      <div class="room-id-badge" id="roomIdDisplay" onclick="copyRoomId()" title="Click to copy link">Room: —</div>
     </div>
     <div class="call-timer" id="callTimer">00:00</div>
   </div>
 
-  <!-- BODY -->
   <div class="call-body">
-
-    <!-- VIDEO AREA -->
     <div class="video-area" id="videoArea">
 
-      <!-- REMOTE VIDEO -->
+      <!-- REMOTE -->
       <div class="remote-video-wrap">
-        <video id="remoteVideo" autoplay playsinline style="display:none"></video>
+        <video id="remoteVideo" autoplay playsinline></video>
         <div class="remote-placeholder" id="remotePlaceholder">
           <div class="rp-avatar" id="remoteAvatar">?</div>
           <div class="rp-name" id="remoteNameDisplay">Waiting for someone...</div>
-          <div class="rp-status" id="remoteStatus">Share the room link to invite</div>
+          <div class="rp-status" id="remoteStatus">
+            <div class="wp-dot"></div><div class="wp-dot"></div><div class="wp-dot"></div>
+          </div>
         </div>
       </div>
 
       <!-- LOCAL PIP -->
       <div class="local-pip" id="localPip">
         <video id="localVideo" autoplay muted playsinline></video>
-        <div class="local-placeholder" id="localPlaceholder" style="display:none">
-          <span id="myInitial">Y</span>
-        </div>
+        <div class="local-placeholder" id="localPlaceholder"><span id="myInitial">Y</span></div>
       </div>
 
-      <!-- SCREEN SHARE INDICATOR -->
-      <div class="screen-indicator" id="screenIndicator">🖥️ You are sharing your screen</div>
+      <!-- QUALITY BADGE -->
+      <div class="quality-badge" id="qualityBadge" style="display:none">
+        <div class="quality-bars">
+          <div class="qb active" id="qb1"></div>
+          <div class="qb active" id="qb2"></div>
+          <div class="qb" id="qb3"></div>
+          <div class="qb" id="qb4"></div>
+        </div>
+        <span id="qualityText">Good</span>
+      </div>
+
+      <!-- SCREEN INDICATOR -->
+      <div class="screen-indicator" id="screenIndicator">🖥️ Sharing Screen</div>
 
       <!-- CONNECTING OVERLAY -->
       <div class="connecting-overlay" id="connectingOverlay">
@@ -540,43 +765,61 @@ footer{background:#0d0d1a;color:rgba(255,255,255,.5);padding:2rem 5%;
         <div class="conn-sub" id="connectingSub">Getting camera & microphone access</div>
       </div>
 
-      <!-- INVITE OVERLAY (shown when waiting for peer) -->
-      <div class="invite-overlay" id="inviteOverlay" style="display:none">
+      <!-- INVITE OVERLAY -->
+      <div class="invite-overlay" id="inviteOverlay">
         <div class="invite-card">
           <div class="invite-title">📨 Invite Someone</div>
-          <div class="invite-sub">Share this Room ID or link with whoever you want to call. They click, enter name, and you're live!</div>
-          <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:.3rem;text-align:left">Room ID (share this):</div>
+          <div class="invite-sub">Share this link — they click, enter name, and you're live!</div>
           <div class="invite-link" id="inviteLinkDisplay" onclick="copyRoomId()"></div>
-          <button class="btn-copy" id="copyBtn" onclick="copyRoomId()">📋 Copy Room Link</button>
-          <a id="waShareBtn" href="#" target="_blank" class="btn-share-wa">
-            <span>💬</span> Share on WhatsApp
-          </a>
-          <div style="margin-top:.8rem;font-size:.72rem;color:rgba(255,255,255,.3)">Waiting for them to join...</div>
+          <div class="invite-actions">
+            <button class="btn-copy" id="copyBtn" onclick="copyRoomId()">📋 Copy Room Link</button>
+            <a id="waShareBtn" href="#" target="_blank" class="btn-share-wa"><span>💬</span> Share on WhatsApp</a>
+          </div>
+          <div class="waiting-pulse"><div class="wp-dot"></div><div class="wp-dot"></div><div class="wp-dot"></div><span style="margin-left:4px">Waiting for someone to join...</span></div>
         </div>
       </div>
 
+      <!-- REACTIONS PICKER -->
+      <div class="reactions-picker" id="reactionsPicker">
+        <button class="react-btn" onclick="sendReaction('👍')">👍</button>
+        <button class="react-btn" onclick="sendReaction('❤️')">❤️</button>
+        <button class="react-btn" onclick="sendReaction('😂')">😂</button>
+        <button class="react-btn" onclick="sendReaction('👏')">👏</button>
+        <button class="react-btn" onclick="sendReaction('🔥')">🔥</button>
+        <button class="react-btn" onclick="sendReaction('😮')">😮</button>
+        <button class="react-btn" onclick="sendReaction('🎉')">🎉</button>
+      </div>
+
       <!-- CALL CONTROLS -->
-      <div class="call-controls">
+      <div class="call-controls" id="callControls">
         <div class="ctrl-wrap">
-          <button class="cc-btn cc-mic" id="micBtn" onclick="toggleMic()" title="Mute/Unmute">🎙️</button>
+          <button class="cc-btn cc-mic" id="micBtn" onclick="toggleMic()">🎙️</button>
           <span class="cc-label">Mic</span>
         </div>
         <div class="ctrl-wrap">
-          <button class="cc-btn cc-cam" id="camBtn" onclick="toggleCam()" title="Camera On/Off">📷</button>
+          <button class="cc-btn cc-cam" id="camBtn" onclick="toggleCam()">📷</button>
           <span class="cc-label">Camera</span>
         </div>
         <div class="ctrl-wrap">
-          <button class="cc-btn cc-screen" id="screenBtn" onclick="toggleScreen()" title="Share Screen">🖥️</button>
+          <button class="cc-btn cc-screen" id="screenBtn" onclick="toggleScreen()">🖥️</button>
           <span class="cc-label">Screen</span>
         </div>
         <div class="ctrl-wrap">
-          <button class="cc-btn cc-chat" id="chatBtn" onclick="toggleChat()" title="Chat">
+          <button class="cc-btn cc-react" id="reactBtn" onclick="toggleReactions()">😄</button>
+          <span class="cc-label">React</span>
+        </div>
+        <div class="ctrl-wrap">
+          <button class="cc-btn cc-chat" id="chatBtn" onclick="togglePanel('chat')">
             💬<span class="cc-badge" id="chatBadge" style="display:none">0</span>
           </button>
           <span class="cc-label">Chat</span>
         </div>
         <div class="ctrl-wrap">
-          <button class="cc-btn cc-end" onclick="endCall()" title="End Call">📵</button>
+          <button class="cc-btn cc-more" id="participantsBtn" onclick="togglePanel('participants')">👥</button>
+          <span class="cc-label">People</span>
+        </div>
+        <div class="ctrl-wrap">
+          <button class="cc-btn cc-end" onclick="endCall()">📵</button>
           <span class="cc-label">End</span>
         </div>
       </div>
@@ -586,311 +829,287 @@ footer{background:#0d0d1a;color:rgba(255,255,255,.5);padding:2rem 5%;
     <div class="chat-panel" id="chatPanel">
       <div class="chat-ph">
         <span>💬 Live Chat</span>
-        <button class="chat-close" onclick="toggleChat()">✕</button>
+        <button class="chat-close" onclick="togglePanel('chat')">✕</button>
       </div>
       <div class="chat-msgs" id="chatMsgs"></div>
       <div class="chat-inp-row">
-        <input class="chat-input" id="chatInput" placeholder="Type message..." maxlength="500"
-          onkeydown="if(event.key==='Enter')sendChatMsg()">
+        <input class="chat-input" id="chatInput" placeholder="Type a message..." maxlength="500"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMsg()}">
         <button class="chat-send-btn" onclick="sendChatMsg()">➤</button>
       </div>
     </div>
 
+    <!-- PARTICIPANTS PANEL -->
+    <div class="participants-panel" id="participantsPanel">
+      <div class="pp-header">
+        <span>👥 People (<span id="participantCount">1</span>)</span>
+        <button class="chat-close" onclick="togglePanel('participants')">✕</button>
+      </div>
+      <div class="pp-list" id="participantsList"></div>
+    </div>
   </div>
 </section>
 
 <div class="status-bar" id="statusBar"><div class="sb-dot"></div><span id="statusText">Connected</span></div>
 
 <script>
-// ─── STATE ───
-let localStream = null;
-let peer = null;
-let currentCall = null;
-let currentConn = null;
-let myName = 'You';
-let myRoomId = '';
-let remoteName = 'Friend';
-let micOn = true, camOn = true;
-let screenSharing = false;
-let screenStream = null;
-let callTimerInterval = null;
-let callSeconds = 0;
-let chatOpen = false;
-let unreadMsgs = 0;
-let isHost = false;
-let pendingRoomId = null;
+// ════════════════════════
+// STATE
+// ════════════════════════
+let localStream = null, peer = null, currentCall = null, currentConn = null;
+let myName = 'You', myRoomId = '', remoteName = 'Friend';
+let micOn = true, camOn = true, screenSharing = false, screenStream = null;
+let callTimerInterval = null, callSeconds = 0;
+let activePanels = { chat: false, participants: false };
+let unreadMsgs = 0, inActiveCall = false, pendingRoomId = null;
+let qualityInterval = null;
 
-// FIX: track whether we are in an active call so popstate knows what to do
-let inActiveCall = false;
-
-// ─── SCREEN UTILS ───
+// ════════════════════════
+// SCREEN MANAGEMENT
+// ════════════════════════
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // Scroll to top on landing
+  if(id === 'landing') window.scrollTo(0,0);
 }
 
-// FIX: goHome prevents default link navigation and uses our own cleanup
-function goHome(e){
-  if(e) e.preventDefault();
-  cleanupAndGoLanding();
-}
-
-function showLanding(){
-  cleanupAndGoLanding();
-}
+function goHome(e){ if(e) e.preventDefault(); cleanupAndGoLanding(); }
 
 function cleanupAndGoLanding(){
   inActiveCall = false;
   stopAllMedia();
-  if(peer && !peer.destroyed){ peer.destroy(); peer = null; }
+  if(peer && !peer.destroyed){ try{ peer.destroy(); }catch(e){} peer = null; }
   clearInterval(callTimerInterval);
+  clearInterval(qualityInterval);
   resetCallUI();
   showScreen('landing');
-  // FIX: Remove the ?room= param from URL without triggering popstate
-  window.history.replaceState({page:'landing'}, document.title, window.location.pathname);
+  window.history.replaceState({page:'landing'}, '', window.location.pathname);
 }
 
 function scrollToRoom(){ document.getElementById('roomsec').scrollIntoView({behavior:'smooth'}); }
 
-// ─── STOP ALL MEDIA ───
+// ════════════════════════
+// MEDIA
+// ════════════════════════
 function stopAllMedia(){
   if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
   if(screenStream){ screenStream.getTracks().forEach(t => t.stop()); screenStream = null; }
-  if(currentCall){ currentCall.close(); currentCall = null; }
-  if(currentConn){ currentConn.close(); currentConn = null; }
-  // Stop preview video too
+  if(currentCall){ try{ currentCall.close(); }catch(e){} currentCall = null; }
+  if(currentConn){ try{ currentConn.close(); }catch(e){} currentConn = null; }
   const pv = document.getElementById('previewVideo');
-  if(pv && pv.srcObject){
-    pv.srcObject.getTracks().forEach(t => t.stop());
-    pv.srcObject = null;
-  }
+  if(pv && pv.srcObject){ pv.srcObject.getTracks().forEach(t => t.stop()); pv.srcObject = null; }
 }
 
-// ─── TOAST ───
+async function getMedia(videoOnly = false){
+  if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  const constraints = [
+    {video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'}, audio: !videoOnly},
+    {video:true, audio: !videoOnly},
+    {audio:true, video:false}
+  ];
+  for(const c of constraints){
+    try{
+      localStream = await navigator.mediaDevices.getUserMedia(c);
+      if(!c.video || c.video === false) toast('Camera unavailable — audio only call', 'info');
+      return true;
+    }catch(e){ continue; }
+  }
+  toast('Camera & mic denied. Allow access in browser settings.', 'error');
+  return false;
+}
+
+// ════════════════════════
+// TOAST
+// ════════════════════════
+let toastTimer = null;
 function toast(msg, type=''){
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast ' + (type||'');
+  t.className = 'toast' + (type ? ' '+type : '');
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-// ─── PEER SETUP ───
-function initPeer(forcedId){
+// ════════════════════════
+// PEER
+// ════════════════════════
+function initPeer(){
   return new Promise((resolve, reject) => {
-    const opts = {
-      debug: 0,
-      config: {
-        iceServers: [
-          {urls: 'stun:stun.l.google.com:19302'},
-          {urls: 'stun:stun1.l.google.com:19302'},
-          {urls: 'stun:stun2.l.google.com:19302'}
-        ]
-      }
-    };
-    peer = forcedId ? new Peer(forcedId, opts) : new Peer(opts);
-    peer.on('open', id => { console.log('Peer ID:', id); resolve(id); });
-    peer.on('error', err => { console.error('Peer error:', err); reject(err); });
+    const opts = {debug:0, config:{iceServers:[
+      {urls:'stun:stun.l.google.com:19302'},
+      {urls:'stun:stun1.l.google.com:19302'},
+      {urls:'stun:stun2.l.google.com:19302'},
+      {urls:'stun:stun.cloudflare.com:3478'}
+    ]}};
+    peer = new Peer(opts);
+    const timeout = setTimeout(() => reject(new Error('Connection timeout')), 12000);
+    peer.on('open', id => { clearTimeout(timeout); resolve(id); });
+    peer.on('error', err => { clearTimeout(timeout); reject(err); });
     peer.on('call', handleIncomingCall);
     peer.on('connection', handleIncomingConn);
   });
 }
 
-// ─── GET MEDIA ───
-// FIX: Always stop existing localStream before requesting new one
-async function getMedia(){
-  if(localStream){
-    localStream.getTracks().forEach(t => t.stop());
-    localStream = null;
-  }
-  try{
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video: {width:{ideal:1280}, height:{ideal:720}, facingMode:'user'},
-      audio: true
-    });
-    return true;
-  }catch(e){
-    try{
-      localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-      return true;
-    }catch(e2){
-      try{
-        localStream = await navigator.mediaDevices.getUserMedia({audio: true});
-        toast('Camera not available — audio only call');
-        return true;
-      }catch(e3){
-        toast('Camera & mic access denied. Please allow in browser settings.', 'error');
-        return false;
-      }
-    }
-  }
-}
-
-// ─── CREATE ROOM (HOST) ───
+// ════════════════════════
+// CREATE ROOM (HOST)
+// ════════════════════════
 async function createRoom(){
   const name = document.getElementById('yourName').value.trim() || 'You';
-  myName = name;
-  isHost = true;
-  inActiveCall = true;
+  myName = name; isHost = true; inActiveCall = true;
 
   showScreen('callscreen');
-  document.getElementById('connectingOverlay').style.display = 'flex';
-  document.getElementById('connectingText').textContent = 'Setting up your room...';
-  document.getElementById('connectingSub').textContent = 'Getting camera & microphone access';
+  setOverlay('connecting', 'Setting up your room...', 'Getting camera & microphone');
 
-  const gotMedia = await getMedia();
-  if(!gotMedia){ cleanupAndGoLanding(); return; }
-
+  const ok = await getMedia();
+  if(!ok){ cleanupAndGoLanding(); return; }
   attachLocalStream();
 
-  document.getElementById('connectingSub').textContent = 'Creating secure room...';
+  setOverlay('connecting', 'Creating secure room...', 'Almost ready...');
 
   try{
     const roomId = await initPeer();
     myRoomId = roomId;
-    document.getElementById('roomIdDisplay').textContent = 'Room: ' + roomId.substring(0,12) + '...';
-    document.getElementById('connectingOverlay').style.display = 'none';
-    document.getElementById('inviteOverlay').style.display = 'flex';
+    updateRoomBadge(roomId);
+    setOverlay('invite');
 
-    const shareUrl = window.location.origin + window.location.pathname + '?room=' + roomId;
-    document.getElementById('inviteLinkDisplay').textContent = shareUrl;
+    const url = makeShareUrl(roomId);
+    document.getElementById('inviteLinkDisplay').textContent = url;
     document.getElementById('waShareBtn').href =
-      'https://wa.me/?text=' + encodeURIComponent('Join my HelloCall video call! Click: ' + shareUrl + '\n\nRoom ID: ' + roomId);
+      'https://wa.me/?text=' + encodeURIComponent('Join my HelloCall video call!\n' + url + '\n\nRoom ID: ' + roomId);
 
     startTimer();
-    setStatus('🟢 Room ready — waiting for someone to join');
-    toast('Room created! Share the link to invite someone', 'success');
-
-    // FIX: Use replaceState so refreshing re-triggers the join flow, not popstate back
+    setConnStatus('yellow', '⏳ Waiting for someone...');
+    toast('Room ready! Share the link to invite', 'success');
     window.history.replaceState({page:'room', room:roomId}, '', window.location.pathname + '?room=' + roomId);
+    updateParticipants();
 
   }catch(e){
     console.error(e);
-    toast('Could not create room. Check internet connection.', 'error');
+    toast('Could not create room. Check your internet.', 'error');
     cleanupAndGoLanding();
   }
 }
 
-// ─── JOIN ROOM (GUEST) ───
+// ════════════════════════
+// JOIN FLOW
+// ════════════════════════
 function joinRoom(){
   const rid = document.getElementById('joinRoomId').value.trim();
-  if(!rid){ toast('Enter a Room ID first', 'error'); return; }
+  if(!rid){ toast('Please enter a Room ID first', 'error'); return; }
   openJoiningScreen(rid);
 }
 
 function openJoiningScreen(roomId){
   pendingRoomId = roomId;
   showScreen('joiningscreen');
-  document.getElementById('joiningMsg').textContent =
-    'Room ID: ' + roomId.substring(0,20) + '... — Enter your name and allow camera to join.';
+  const short = roomId.length > 20 ? roomId.substring(0,20) + '...' : roomId;
+  document.getElementById('joiningMsg').textContent = 'Room: ' + short + ' — Enter your name to join.';
   document.getElementById('joinBtn').disabled = false;
   document.getElementById('joinBtn').textContent = '✅ Join Now';
+  document.getElementById('joinerName').value = '';
   startPreviewCamera();
 }
 
 async function startPreviewCamera(){
-  // FIX: stop any existing preview stream first
   const pv = document.getElementById('previewVideo');
-  if(pv.srcObject){
-    pv.srcObject.getTracks().forEach(t => t.stop());
-    pv.srcObject = null;
-  }
-  document.getElementById('noCamMsg').style.display = 'none';
+  const noMsg = document.getElementById('noCamMsg');
+  noMsg.style.display = 'none';
+  if(pv.srcObject){ pv.srcObject.getTracks().forEach(t => t.stop()); pv.srcObject = null; }
   try{
-    // Use a SEPARATE stream just for preview — don't set localStream here
-    const previewStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
-    pv.srcObject = previewStream;
-    // Store it in localStream so enterRoom() can use it directly
-    localStream = previewStream;
+    localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+    pv.srcObject = localStream;
   }catch(e){
-    document.getElementById('noCamMsg').style.display = 'flex';
-    localStream = null;
+    try{
+      localStream = await navigator.mediaDevices.getUserMedia({audio:true});
+      noMsg.style.display = 'flex';
+    }catch(e2){
+      localStream = null;
+      noMsg.style.display = 'flex';
+    }
   }
 }
 
 async function enterRoom(){
   const name = document.getElementById('joinerName').value.trim() || 'Guest';
-  myName = name;
-  isHost = false;
-  inActiveCall = true;
+  myName = name; inActiveCall = true;
   const rid = pendingRoomId;
+  if(!rid){ toast('Room ID missing', 'error'); return; }
 
   if(!localStream){
     const ok = await getMedia();
-    if(!ok){ toast('Need camera/mic to join', 'error'); return; }
+    if(!ok && !localStream){ toast('Cannot join without camera or mic.', 'error'); return; }
   }
 
-  document.getElementById('joinBtn').disabled = true;
-  document.getElementById('joinBtn').textContent = 'Connecting...';
+  const btn = document.getElementById('joinBtn');
+  btn.disabled = true;
+  btn.textContent = 'Connecting...';
+
+  // Stop preview element but keep the stream
+  document.getElementById('previewVideo').srcObject = null;
+
   showScreen('callscreen');
-
-  document.getElementById('connectingOverlay').style.display = 'flex';
-  document.getElementById('connectingText').textContent = 'Connecting to room...';
-  document.getElementById('connectingSub').textContent = 'Establishing peer connection';
-
-  // FIX: Stop preview video element (stream is reused as localStream)
-  const pv = document.getElementById('previewVideo');
-  pv.srcObject = null;
-
+  setOverlay('connecting', 'Joining room...', 'Connecting to peer...');
   attachLocalStream();
 
   try{
     await initPeer();
     myRoomId = rid;
-    document.getElementById('roomIdDisplay').textContent = 'Room: ' + rid.substring(0,12) + '...';
+    updateRoomBadge(rid);
 
-    // Data connection for signaling/chat
-    const conn = peer.connect(rid, {metadata:{name:myName}});
+    // Open data channel first
+    const conn = peer.connect(rid, {metadata:{name:myName}, reliable:true});
     currentConn = conn;
     setupConnListeners(conn);
-
     conn.on('open', () => {
       conn.send({type:'hello', name:myName});
     });
 
-    // FIX: Make call immediately after peer connects (no arbitrary delay needed)
-    // Use a small delay only to let data connection stabilize
+    // Then make the media call
     setTimeout(() => {
-      if(!localStream){ toast('Lost media stream', 'error'); return; }
+      if(!peer || peer.destroyed) return;
       const call = peer.call(rid, localStream, {metadata:{name:myName}});
+      if(!call){ toast('Could not reach host. Room may be full or expired.', 'error'); cleanupAndGoLanding(); return; }
       currentCall = call;
-      call.on('stream', remoteStream => {
-        document.getElementById('connectingOverlay').style.display = 'none';
-        document.getElementById('inviteOverlay').style.display = 'none';
-        showRemoteStream(remoteStream, myName);
+      call.on('stream', rs => {
+        hideOverlay();
+        showRemoteStream(rs, remoteName || name);
       });
       call.on('close', () => { toast('Call ended by remote'); endCall(); });
-      call.on('error', err => { toast('Call error: ' + err.message, 'error'); });
-    }, 800);
+      call.on('error', err => { toast('Call error: ' + (err.message||err), 'error'); });
+    }, 900);
 
     startTimer();
-    setStatus('🟡 Connecting to room...');
-
-    // FIX: replaceState so refresh triggers join screen again
+    setConnStatus('yellow', '🟡 Connecting...');
     window.history.replaceState({page:'joining', room:rid}, '', window.location.pathname + '?room=' + rid);
+    updateParticipants();
 
   }catch(e){
     console.error(e);
-    toast('Could not connect. Check the Room ID.', 'error');
+    toast('Could not connect. Check the Room ID and try again.', 'error');
     cleanupAndGoLanding();
   }
 }
 
-// ─── HANDLE INCOMING ───
+// ════════════════════════
+// INCOMING HANDLERS
+// ════════════════════════
 function handleIncomingCall(call){
-  console.log('Incoming call from', call.peer);
   remoteName = call.metadata?.name || 'Someone';
   currentCall = call;
   call.answer(localStream);
-  call.on('stream', remoteStream => {
-    document.getElementById('connectingOverlay').style.display = 'none';
-    document.getElementById('inviteOverlay').style.display = 'none';
-    showRemoteStream(remoteStream, remoteName);
-    setStatus('🟢 Connected with ' + remoteName);
-    toast(remoteName + ' joined the call! 🎉', 'success');
+  call.on('stream', rs => {
+    hideOverlay();
+    showRemoteStream(rs, remoteName);
+    setConnStatus('green', '🟢 Live with ' + remoteName);
+    toast(remoteName + ' joined! 🎉', 'success');
     addSysMsg(remoteName + ' joined the room');
+    startQualityMonitor();
+    updateParticipants();
   });
   call.on('close', () => { toast('Call ended'); endCall(); });
+  call.on('error', err => { toast('Call error', 'error'); });
 }
 
 function handleIncomingConn(conn){
@@ -900,43 +1119,51 @@ function handleIncomingConn(conn){
 }
 
 function setupConnListeners(conn){
-  conn.on('open', () => { console.log('Data connection open'); });
+  conn.on('open', () => { console.log('Data channel open'); });
   conn.on('data', data => {
-    if(data.type === 'hello'){
-      remoteName = data.name || 'Friend';
-      updateRemoteName(remoteName);
-      addSysMsg(remoteName + ' is connected');
-      setStatus('🟢 Connected with ' + remoteName);
-    } else if(data.type === 'chat'){
-      receiveChatMsg(data.name, data.msg);
-    } else if(data.type === 'camOff'){
-      showRemotePlaceholder(true, data.name || remoteName);
-    } else if(data.type === 'camOn'){
-      showRemotePlaceholder(false, data.name || remoteName);
-    } else if(data.type === 'bye'){
-      toast(remoteName + ' left the call');
-      addSysMsg(remoteName + ' left the call');
-      hangupRemote();
+    switch(data.type){
+      case 'hello':
+        remoteName = data.name || 'Friend';
+        updateRemoteName(remoteName);
+        addSysMsg(remoteName + ' connected');
+        setConnStatus('green', '🟢 Live with ' + remoteName);
+        startQualityMonitor();
+        updateParticipants();
+        break;
+      case 'chat':
+        receiveChatMsg(data.name, data.msg);
+        break;
+      case 'camOff': showRemotePlaceholder(true, data.name); break;
+      case 'camOn':  showRemotePlaceholder(false, data.name); break;
+      case 'reaction':
+        showFloatingReaction(data.emoji, false);
+        break;
+      case 'bye':
+        toast(remoteName + ' left the call');
+        addSysMsg(remoteName + ' left');
+        hangupRemote();
+        setConnStatus('', '🔴 Disconnected');
+        updateParticipants();
+        break;
     }
   });
-  conn.on('close', () => { addSysMsg('Peer disconnected'); });
+  conn.on('close', () => {
+    addSysMsg('Connection lost');
+    setConnStatus('', '');
+  });
+  conn.on('error', e => console.warn('Conn error:', e));
 }
 
-// ─── STREAM MANAGEMENT ───
+// ════════════════════════
+// STREAM HELPERS
+// ════════════════════════
 function attachLocalStream(){
   const lv = document.getElementById('localVideo');
   const lp = document.getElementById('localPlaceholder');
-  if(localStream){
-    lv.srcObject = localStream;
-    // FIX: Check if there are actual video tracks with real content
-    const vTracks = localStream.getVideoTracks();
-    const hasVideo = vTracks.length > 0;
-    lv.style.display = hasVideo ? 'block' : 'none';
-    lp.style.display = hasVideo ? 'none' : 'flex';
-  } else {
-    lv.style.display = 'none';
-    lp.style.display = 'flex';
-  }
+  lv.srcObject = localStream;
+  const hasVid = localStream && localStream.getVideoTracks().length > 0;
+  lv.style.display = hasVid ? 'block' : 'none';
+  lp.style.display = hasVid ? 'none' : 'flex';
   document.getElementById('myInitial').textContent = myName.charAt(0).toUpperCase();
 }
 
@@ -946,17 +1173,15 @@ function showRemoteStream(stream, name){
   rv.style.display = 'block';
   document.getElementById('remotePlaceholder').style.display = 'none';
   updateRemoteName(name);
-  setStatus('🟢 Connected with ' + (name || remoteName));
 }
 
 function showRemotePlaceholder(show, name){
   const rv = document.getElementById('remoteVideo');
   const rp = document.getElementById('remotePlaceholder');
   if(show){
-    rv.style.display = 'none';
-    rp.style.display = 'flex';
-    document.getElementById('remoteAvatar').textContent = (name || remoteName).charAt(0).toUpperCase();
-    document.getElementById('remoteNameDisplay').textContent = (name || remoteName) + ' (camera off)';
+    rv.style.display = 'none'; rp.style.display = 'flex';
+    document.getElementById('remoteAvatar').textContent = (name||remoteName).charAt(0).toUpperCase();
+    document.getElementById('remoteNameDisplay').textContent = (name||remoteName) + ' · cam off';
   } else {
     if(rv.srcObject){ rv.style.display = 'block'; rp.style.display = 'none'; }
   }
@@ -966,10 +1191,37 @@ function updateRemoteName(name){
   remoteName = name || 'Friend';
   document.getElementById('remoteAvatar').textContent = remoteName.charAt(0).toUpperCase();
   document.getElementById('remoteNameDisplay').textContent = remoteName;
-  document.getElementById('remoteStatus').textContent = 'On call';
+  document.getElementById('remoteStatus').innerHTML = '<span style="color:var(--g);font-size:.7rem">● On call</span>';
 }
 
-// ─── CONTROLS ───
+// ════════════════════════
+// OVERLAY HELPERS
+// ════════════════════════
+function setOverlay(type, title='', sub=''){
+  const co = document.getElementById('connectingOverlay');
+  const io = document.getElementById('inviteOverlay');
+  co.style.display = type === 'connecting' ? 'flex' : 'none';
+  io.style.display = type === 'invite' ? 'flex' : 'none';
+  if(title) document.getElementById('connectingText').textContent = title;
+  if(sub) document.getElementById('connectingSub').textContent = sub;
+}
+
+function hideOverlay(){
+  document.getElementById('connectingOverlay').style.display = 'none';
+  document.getElementById('inviteOverlay').style.display = 'none';
+}
+
+function updateRoomBadge(roomId){
+  document.getElementById('roomIdDisplay').textContent = '📋 ' + roomId.substring(0,10) + '...';
+}
+
+function makeShareUrl(roomId){
+  return window.location.origin + window.location.pathname + '?room=' + roomId;
+}
+
+// ════════════════════════
+// CONTROLS
+// ════════════════════════
 function toggleMic(){
   if(!localStream) return;
   const at = localStream.getAudioTracks();
@@ -979,7 +1231,7 @@ function toggleMic(){
   const btn = document.getElementById('micBtn');
   btn.textContent = micOn ? '🎙️' : '🔇';
   btn.className = 'cc-btn cc-mic' + (micOn ? '' : ' off');
-  toast(micOn ? 'Microphone ON' : 'Microphone OFF');
+  toast(micOn ? 'Mic ON' : 'Mic OFF');
 }
 
 function toggleCam(){
@@ -995,170 +1247,215 @@ function toggleCam(){
   const btn = document.getElementById('camBtn');
   btn.textContent = camOn ? '📷' : '🚫';
   btn.className = 'cc-btn cc-cam' + (camOn ? '' : ' off');
-  if(currentConn && currentConn.open)
-    currentConn.send({type: camOn ? 'camOn' : 'camOff', name: myName});
+  safeSend({type: camOn ? 'camOn' : 'camOff', name: myName});
   toast(camOn ? 'Camera ON' : 'Camera OFF');
 }
 
-// FIX: Completely rewritten screen share with proper sender replacement
 async function toggleScreen(){
   if(screenSharing){
-    // Stop screen share, restore camera
     screenSharing = false;
     document.getElementById('screenBtn').className = 'cc-btn cc-screen';
     document.getElementById('screenIndicator').classList.remove('show');
+    if(screenStream){ screenStream.getTracks().forEach(t => t.stop()); screenStream = null; }
 
-    if(screenStream){
-      screenStream.getTracks().forEach(t => t.stop());
-      screenStream = null;
-    }
-
-    // Get fresh camera stream
-    const gotMedia = await getMedia();
-    if(gotMedia){
-      // Replace video track in the active call
-      if(currentCall && currentCall.peerConnection){
-        const pc = currentCall.peerConnection;
-        const senders = pc.getSenders();
-        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-        const newVideoTrack = localStream.getVideoTracks()[0];
-        if(videoSender && newVideoTrack){
-          try{ await videoSender.replaceTrack(newVideoTrack); }catch(e){ console.warn('replaceTrack cam:', e); }
-        }
-        // Also replace audio if needed
-        const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
-        const newAudioTrack = localStream.getAudioTracks()[0];
-        if(audioSender && newAudioTrack){
-          try{ await audioSender.replaceTrack(newAudioTrack); }catch(e){ console.warn('replaceTrack audio:', e); }
-        }
-      }
+    // Restore camera
+    const ok = await getMedia();
+    if(ok){
+      await replaceVideoTrack(localStream.getVideoTracks()[0]);
+      await replaceAudioTrack(localStream.getAudioTracks()[0]);
       attachLocalStream();
       toast('Screen sharing stopped');
     }
-
   } else {
-    // Start screen share
     try{
       screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {cursor: 'always', displaySurface: 'monitor'},
-        audio: false
+        video:{cursor:'always'}, audio:false
       });
       screenSharing = true;
+      const svt = screenStream.getVideoTracks()[0];
+      await replaceVideoTrack(svt);
 
-      const screenVideoTrack = screenStream.getVideoTracks()[0];
-
-      // FIX: Replace video track in the peer connection directly
-      if(currentCall && currentCall.peerConnection){
-        const pc = currentCall.peerConnection;
-        const senders = pc.getSenders();
-        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-        if(videoSender && screenVideoTrack){
-          try{ await videoSender.replaceTrack(screenVideoTrack); }catch(e){ console.warn('replaceTrack screen:', e); }
-        }
-      }
-
-      // Show screen stream in local PIP
+      // Show in PIP
       const lv = document.getElementById('localVideo');
       lv.srcObject = screenStream;
       lv.style.display = 'block';
       document.getElementById('localPlaceholder').style.display = 'none';
-
       document.getElementById('screenBtn').className = 'cc-btn cc-screen off';
       document.getElementById('screenIndicator').classList.add('show');
 
-      // Auto-stop when user clicks "Stop Sharing" in browser UI
-      screenVideoTrack.onended = () => {
-        if(screenSharing) toggleScreen();
-      };
-
+      svt.onended = () => { if(screenSharing) toggleScreen(); };
       toast('Screen sharing started', 'success');
-
     }catch(e){
       screenSharing = false;
-      if(e.name !== 'NotAllowedError')
-        toast('Screen share error: ' + e.message, 'error');
+      if(e.name !== 'NotAllowedError') toast('Screen share failed: ' + e.message, 'error');
     }
   }
 }
 
-function toggleChat(){
-  chatOpen = !chatOpen;
-  const panel = document.getElementById('chatPanel');
-  panel.classList.toggle('open', chatOpen);
-  if(chatOpen){
-    unreadMsgs = 0;
-    document.getElementById('chatBadge').style.display = 'none';
-    document.getElementById('chatInput').focus();
-  }
+async function replaceVideoTrack(track){
+  if(!currentCall || !track) return;
+  try{
+    const pc = currentCall.peerConnection;
+    if(!pc) return;
+    const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+    if(sender) await sender.replaceTrack(track);
+  }catch(e){ console.warn('replaceVideoTrack:', e); }
 }
 
+async function replaceAudioTrack(track){
+  if(!currentCall || !track) return;
+  try{
+    const pc = currentCall.peerConnection;
+    if(!pc) return;
+    const sender = pc.getSenders().find(s => s.track && s.track.kind === 'audio');
+    if(sender) await sender.replaceTrack(track);
+  }catch(e){ console.warn('replaceAudioTrack:', e); }
+}
+
+function toggleReactions(){
+  const picker = document.getElementById('reactionsPicker');
+  picker.classList.toggle('show');
+}
+
+function sendReaction(emoji){
+  document.getElementById('reactionsPicker').classList.remove('show');
+  showFloatingReaction(emoji, true);
+  safeSend({type:'reaction', emoji, name:myName});
+}
+
+function showFloatingReaction(emoji, isMe){
+  const el = document.createElement('div');
+  el.className = 'float-react';
+  el.textContent = emoji;
+  const area = document.getElementById('videoArea');
+  el.style.left = (20 + Math.random() * 60) + '%';
+  area.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
+// ════════════════════════
+// PANELS
+// ════════════════════════
+function togglePanel(which){
+  const other = which === 'chat' ? 'participants' : 'chat';
+  // Close other panel
+  if(activePanels[other]){
+    activePanels[other] = false;
+    document.getElementById(other + 'Panel').classList.remove('open');
+  }
+  activePanels[which] = !activePanels[which];
+  document.getElementById(which + 'Panel').classList.toggle('open', activePanels[which]);
+
+  if(which === 'chat' && activePanels.chat){
+    unreadMsgs = 0;
+    document.getElementById('chatBadge').style.display = 'none';
+    setTimeout(() => document.getElementById('chatInput').focus(), 300);
+  }
+  if(which === 'participants' && activePanels.participants){
+    updateParticipants();
+  }
+  // Close reaction picker if opening a panel
+  document.getElementById('reactionsPicker').classList.remove('show');
+}
+
+function updateParticipants(){
+  const list = document.getElementById('participantsList');
+  const count = document.getElementById('participantCount');
+  const colors = ['#5b5ef4','#ff4d9e','#00c8ff','#00f5a0'];
+  let people = [{name: myName, role:'You (Host)', color: colors[0], micOn, camOn}];
+  if(remoteName && remoteName !== 'Friend' && currentCall){
+    people.push({name:remoteName, role:'Guest', color:colors[1], micOn:true, camOn:true});
+  }
+  count.textContent = people.length;
+  list.innerHTML = people.map(p => `
+    <div class="pp-item">
+      <div class="pp-av" style="background:${p.color}">${p.name.charAt(0).toUpperCase()}</div>
+      <div class="pp-info">
+        <div class="pp-name">${escHtml(p.name)}</div>
+        <div class="pp-role">${p.role}</div>
+      </div>
+      <div class="pp-icons">${p.micOn?'🎙️':'🔇'} ${p.camOn?'📷':'🚫'}</div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════
+// END CALL
+// ════════════════════════
 function endCall(){
-  if(currentConn && currentConn.open) currentConn.send({type:'bye', name:myName});
+  safeSend({type:'bye', name:myName});
   inActiveCall = false;
   stopAllMedia();
-  if(peer && !peer.destroyed){ peer.destroy(); peer = null; }
+  if(peer && !peer.destroyed){ try{ peer.destroy(); }catch(e){} peer = null; }
   clearInterval(callTimerInterval);
+  clearInterval(qualityInterval);
+  // Close panels
+  activePanels = {chat:false, participants:false};
+  document.getElementById('chatPanel').classList.remove('open');
+  document.getElementById('participantsPanel').classList.remove('open');
   resetCallUI();
   showScreen('landing');
-  window.history.replaceState({page:'landing'}, document.title, window.location.pathname);
+  window.history.replaceState({page:'landing'}, '', window.location.pathname);
 }
 
 function hangupRemote(){
-  if(currentCall){ currentCall.close(); currentCall = null; }
-  if(currentConn){ currentConn.close(); currentConn = null; }
+  if(currentCall){ try{ currentCall.close(); }catch(e){} currentCall = null; }
+  if(currentConn){ try{ currentConn.close(); }catch(e){} currentConn = null; }
 }
 
 function resetCallUI(){
   const rv = document.getElementById('remoteVideo');
-  rv.srcObject = null;
-  rv.style.display = 'none';
+  rv.srcObject = null; rv.style.display = 'none';
   document.getElementById('remotePlaceholder').style.display = 'flex';
   document.getElementById('remoteNameDisplay').textContent = 'Waiting for someone...';
-  document.getElementById('remoteStatus').textContent = 'Share the room link to invite';
+  document.getElementById('remoteStatus').innerHTML = '<div class="wp-dot"></div><div class="wp-dot"></div><div class="wp-dot"></div>';
   document.getElementById('remoteAvatar').textContent = '?';
   document.getElementById('chatMsgs').innerHTML = '';
-  document.getElementById('connectingOverlay').style.display = 'flex';
-  document.getElementById('connectingText').textContent = 'Setting up your room...';
-  document.getElementById('connectingSub').textContent = 'Getting camera & microphone access';
+  setOverlay('connecting', 'Setting up your room...', 'Getting camera & microphone access');
   document.getElementById('inviteOverlay').style.display = 'none';
-  chatOpen = false;
-  document.getElementById('chatPanel').classList.remove('open');
   callSeconds = 0;
   document.getElementById('callTimer').textContent = '00:00';
   micOn = true; camOn = true; screenSharing = false;
-  document.getElementById('micBtn').textContent = '🎙️';
-  document.getElementById('micBtn').className = 'cc-btn cc-mic';
-  document.getElementById('camBtn').textContent = '📷';
-  document.getElementById('camBtn').className = 'cc-btn cc-cam';
+  document.getElementById('micBtn').textContent = '🎙️'; document.getElementById('micBtn').className = 'cc-btn cc-mic';
+  document.getElementById('camBtn').textContent = '📷'; document.getElementById('camBtn').className = 'cc-btn cc-cam';
   document.getElementById('screenBtn').className = 'cc-btn cc-screen';
   document.getElementById('screenIndicator').classList.remove('show');
   document.getElementById('chatBadge').style.display = 'none';
-  unreadMsgs = 0;
-  const lv = document.getElementById('localVideo');
-  lv.srcObject = null;
+  document.getElementById('qualityBadge').style.display = 'none';
+  document.getElementById('reactionsPicker').classList.remove('show');
+  document.getElementById('roomIdDisplay').textContent = 'Room: —';
+  document.getElementById('localVideo').srcObject = null;
   document.getElementById('localPlaceholder').style.display = 'flex';
+  document.getElementById('connDot').className = 'conn-dot';
+  unreadMsgs = 0;
 }
 
-// ─── CHAT ───
+// ════════════════════════
+// CHAT
+// ════════════════════════
 function sendChatMsg(){
   const inp = document.getElementById('chatInput');
   const msg = inp.value.trim();
   if(!msg) return;
   inp.value = '';
   addChatMsg(myName, msg, true);
-  if(currentConn && currentConn.open)
-    currentConn.send({type:'chat', name:myName, msg});
-  else
-    toast('Not connected yet — message not sent', 'error');
+  if(!safeSend({type:'chat', name:myName, msg})) toast('Message not sent — not connected', 'error');
+}
+
+function safeSend(data){
+  if(currentConn && currentConn.open){ currentConn.send(data); return true; }
+  return false;
 }
 
 function receiveChatMsg(name, msg){
   addChatMsg(name, msg, false);
-  if(!chatOpen){
+  if(!activePanels.chat){
     unreadMsgs++;
-    const badge = document.getElementById('chatBadge');
-    badge.textContent = unreadMsgs > 9 ? '9+' : unreadMsgs;
-    badge.style.display = 'flex';
+    const b = document.getElementById('chatBadge');
+    b.textContent = unreadMsgs > 9 ? '9+' : unreadMsgs;
+    b.style.display = 'flex';
+    // Flash chat button
+    document.getElementById('chatBtn').style.animation = 'none';
   }
 }
 
@@ -1166,116 +1463,213 @@ function addChatMsg(name, msg, isMe){
   const msgs = document.getElementById('chatMsgs');
   const d = document.createElement('div');
   d.className = 'cmsg ' + (isMe ? 'me' : 'them');
-  const now = new Date();
-  const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
-  d.innerHTML = (isMe ? '' : ('<div class="cmsg-name">' + escHtml(name) + '</div>'))
-    + escHtml(msg)
-    + '<div class="cmsg-time">' + timeStr + '</div>';
+  const t = new Date();
+  const ts = String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0');
+  d.innerHTML = (isMe ? '' : '<div class="cmsg-name">' + escHtml(name) + '</div>')
+    + escHtml(msg) + '<div class="cmsg-time">' + ts + '</div>';
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function addSysMsg(text){
+function addSysMsg(txt){
   const msgs = document.getElementById('chatMsgs');
   const d = document.createElement('div');
-  d.className = 'chat-sys';
-  d.textContent = text;
+  d.className = 'chat-sys'; d.textContent = txt;
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function escHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
+function escHtml(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-// ─── TIMER ───
+// ════════════════════════
+// TIMER & STATUS
+// ════════════════════════
 function startTimer(){
   clearInterval(callTimerInterval);
   callSeconds = 0;
   callTimerInterval = setInterval(() => {
     callSeconds++;
-    const m = Math.floor(callSeconds / 60), s = callSeconds % 60;
-    document.getElementById('callTimer').textContent =
-      String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    const m = Math.floor(callSeconds/60), s = callSeconds%60;
+    document.getElementById('callTimer').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }, 1000);
 }
 
-// ─── STATUS ───
-function setStatus(txt){
-  document.getElementById('connStatus').textContent = txt;
+function setConnStatus(dotClass, text){
+  const dot = document.getElementById('connDot');
+  dot.className = 'conn-dot' + (dotClass ? ' '+dotClass : '');
   const sb = document.getElementById('statusBar');
-  document.getElementById('statusText').textContent = txt;
+  document.getElementById('statusText').textContent = text;
   sb.classList.add('show');
-  setTimeout(() => sb.classList.remove('show'), 4000);
+  clearTimeout(window._sbTimer);
+  window._sbTimer = setTimeout(() => sb.classList.remove('show'), 4000);
 }
 
-// ─── COPY ROOM ID ───
+// ════════════════════════
+// QUALITY MONITOR
+// ════════════════════════
+function startQualityMonitor(){
+  clearInterval(qualityInterval);
+  document.getElementById('qualityBadge').style.display = 'flex';
+  qualityInterval = setInterval(async () => {
+    if(!currentCall || !currentCall.peerConnection) return;
+    try{
+      const stats = await currentCall.peerConnection.getStats();
+      let rtt = null;
+      stats.forEach(s => {
+        if(s.type === 'candidate-pair' && s.state === 'succeeded' && s.currentRoundTripTime != null)
+          rtt = s.currentRoundTripTime * 1000;
+      });
+      let quality = 4, label = 'Excellent';
+      if(rtt > 300){ quality = 1; label = 'Poor'; }
+      else if(rtt > 150){ quality = 2; label = 'Fair'; }
+      else if(rtt > 80){ quality = 3; label = 'Good'; }
+      for(let i=1;i<=4;i++) document.getElementById('qb'+i).className = 'qb' + (i<=quality?' active':'');
+      document.getElementById('qualityText').textContent = label;
+    }catch(e){}
+  }, 4000);
+}
+
+// ════════════════════════
+// COPY / SHARE
+// ════════════════════════
 function copyRoomId(){
-  const url = window.location.origin + window.location.pathname + '?room=' + myRoomId;
+  const url = makeShareUrl(myRoomId);
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('copyBtn');
-    btn.textContent = '✅ Copied!';
-    btn.className = 'btn-copy copied';
-    setTimeout(() => { btn.textContent = '📋 Copy Room Link'; btn.className = 'btn-copy'; }, 2500);
-    toast('Room link copied! Share it with your friend 🎉', 'success');
+    if(btn){ btn.textContent = '✅ Copied!'; btn.className = 'btn-copy copied';
+      setTimeout(() => { btn.textContent = '📋 Copy Room Link'; btn.className = 'btn-copy'; }, 2500); }
+    toast('Room link copied! 🎉', 'success');
   }).catch(() => {
     const ta = document.createElement('textarea');
-    ta.value = url;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
+    ta.value = url; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
     toast('Copied!', 'success');
   });
 }
 
-// ─── CHECK URL PARAMS ───
-// FIX: On page load/refresh, if ?room= is in URL → show joining screen (don't try to resume a dead call)
+// ════════════════════════
+// URL PARAMS
+// ════════════════════════
 function checkUrlParams(){
-  const params = new URLSearchParams(window.location.search);
-  const roomId = params.get('room');
-  if(roomId){
-    // Could be a host refreshing or a guest clicking an invite link
-    // In both cases we show the joining screen so they can re-enter
-    openJoiningScreen(roomId);
+  const roomId = new URLSearchParams(window.location.search).get('room');
+  if(roomId) openJoiningScreen(roomId);
+}
+
+// ════════════════════════
+// DRAGGABLE PIP
+// ════════════════════════
+function initDraggablePip(){
+  const pip = document.getElementById('localPip');
+  let isDragging = false, startX, startY, origLeft, origBottom;
+
+  function getPos(e){ return e.touches ? {x:e.touches[0].clientX, y:e.touches[0].clientY} : {x:e.clientX, y:e.clientY}; }
+
+  pip.addEventListener('mousedown', start);
+  pip.addEventListener('touchstart', start, {passive:true});
+
+  function start(e){
+    isDragging = true;
+    const p = getPos(e);
+    const rect = pip.getBoundingClientRect();
+    startX = p.x - rect.left;
+    startY = p.y - rect.top;
+    pip.style.cursor = 'grabbing';
+    pip.style.transition = 'none';
+  }
+
+  document.addEventListener('mousemove', move);
+  document.addEventListener('touchmove', move, {passive:false});
+
+  function move(e){
+    if(!isDragging) return;
+    if(e.cancelable) e.preventDefault();
+    const p = getPos(e);
+    const parent = document.getElementById('videoArea');
+    const pr = parent.getBoundingClientRect();
+    let x = p.x - pr.left - startX;
+    let y = p.y - pr.top - startY;
+    x = Math.max(0, Math.min(x, pr.width - pip.offsetWidth));
+    y = Math.max(0, Math.min(y, pr.height - pip.offsetHeight));
+    pip.style.left = x + 'px';
+    pip.style.top = y + 'px';
+    pip.style.right = 'auto';
+    pip.style.bottom = 'auto';
+  }
+
+  document.addEventListener('mouseup', stop);
+  document.addEventListener('touchend', stop);
+
+  function stop(){
+    isDragging = false;
+    pip.style.cursor = 'move';
+    pip.style.transition = 'border-color .2s';
   }
 }
 
-// ─── INIT ───
+// ════════════════════════
+// CLOSE PICKERS ON OUTSIDE CLICK
+// ════════════════════════
+document.addEventListener('click', e => {
+  const picker = document.getElementById('reactionsPicker');
+  const reactBtn = document.getElementById('reactBtn');
+  if(picker.classList.contains('show') && !picker.contains(e.target) && e.target !== reactBtn)
+    picker.classList.remove('show');
+});
+
+// ════════════════════════
+// INIT
+// ════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  // FIX: Set initial history state so we can distinguish navigation
-  if(!window.location.search.includes('room=')){
-    window.history.replaceState({page:'landing'}, document.title, window.location.pathname);
-  }
+  if(!window.location.search.includes('room='))
+    window.history.replaceState({page:'landing'}, '', window.location.pathname);
 
   checkUrlParams();
+  initDraggablePip();
 
-  // Enter key on landing inputs
-  document.getElementById('yourName')?.addEventListener('keydown', e => { if(e.key === 'Enter') createRoom(); });
-  document.getElementById('joinRoomId')?.addEventListener('keydown', e => { if(e.key === 'Enter') joinRoom(); });
-  document.getElementById('joinerName')?.addEventListener('keydown', e => { if(e.key === 'Enter') enterRoom(); });
-
-  // FIX: Handle browser back button — only go to landing if we are in a call/joining screen
-  // Do NOT use popstate for call screen management since replaceState doesn't trigger popstate
-  window.addEventListener('popstate', (e) => {
-    const state = e.state;
-    // If navigating back to landing state, clean up
-    if(!state || state.page === 'landing'){
-      if(inActiveCall){
-        endCall();
-      } else {
-        stopAllMedia();
-        showScreen('landing');
-      }
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    const screen = document.querySelector('.screen.active')?.id;
+    if(screen !== 'callscreen') return;
+    if(e.target.tagName === 'INPUT') return;
+    if(e.key === 'm' || e.key === 'M') toggleMic();
+    if(e.key === 'v' || e.key === 'V') toggleCam();
+    if(e.key === 'c' || e.key === 'C') togglePanel('chat');
+    if(e.key === 'Escape'){
+      document.getElementById('reactionsPicker').classList.remove('show');
+      if(activePanels.chat) togglePanel('chat');
+      if(activePanels.participants) togglePanel('participants');
     }
   });
 
-  // FIX: Clean up media on page unload/refresh
+  // Landing input enter keys
+  document.getElementById('yourName')?.addEventListener('keydown', e => { if(e.key==='Enter') createRoom(); });
+  document.getElementById('joinRoomId')?.addEventListener('keydown', e => { if(e.key==='Enter') joinRoom(); });
+  document.getElementById('joinerName')?.addEventListener('keydown', e => { if(e.key==='Enter') enterRoom(); });
+
+  // Back button
+  window.addEventListener('popstate', e => {
+    if(!e.state || e.state.page === 'landing'){
+      if(inActiveCall) endCall();
+      else { stopAllMedia(); showScreen('landing'); }
+    }
+  });
+
+  // Cleanup on unload
   window.addEventListener('beforeunload', () => {
+    safeSend?.({type:'bye', name:myName});
     stopAllMedia();
-    if(peer && !peer.destroyed) peer.destroy();
+    if(peer && !peer.destroyed) try{ peer.destroy(); }catch(z){}
+  });
+
+  // Visibility change — re-request media if returning from background on mobile
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden && inActiveCall && localStream){
+      const vt = localStream.getVideoTracks();
+      if(vt.length && vt[0].readyState === 'ended' && camOn){
+        // Track died in background, re-acquire
+        getMedia().then(ok => { if(ok) attachLocalStream(); });
+      }
+    }
   });
 });
 </script>
